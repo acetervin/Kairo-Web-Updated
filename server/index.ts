@@ -12,8 +12,11 @@ export async function createApp(): Promise<Express> {
     // Apply security headers to all routes
     app.use(securityHeaders);
     
-    // Apply general rate limiting to all API routes
-    app.use('/api', generalRateLimiter);
+    // Apply general rate limiting to all API routes (skip in serverless)
+    const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
+    if (!isServerless) {
+        app.use('/api', generalRateLimiter);
+    }
 
     // Don't parse JSON for Stripe webhook - it needs raw body
     app.use((req, res, next) => {

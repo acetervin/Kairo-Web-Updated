@@ -12,9 +12,14 @@ const sslRequired =
   process.env.DB_SSL === 'true' ||
   /neon\.tech|sslmode=require/i.test(connectionString || '');
 
+// Determine pool size based on environment
+// Serverless (Vercel, AWS Lambda) should use smaller pools
+const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
+const poolSize = isServerless ? 1 : 10;
+
 export const pool = new Pool({
   connectionString,
-  max: 10,
+  max: poolSize,
   idleTimeoutMillis: 30000,
   // Increase connect timeout to reduce transient timeouts
   connectionTimeoutMillis: 20000,
@@ -27,13 +32,15 @@ pool.on('error', (err) => {
   console.error('Unexpected database pool error:', err);
 });
 
-// Test the connection on startup
-pool.query('SELECT NOW()', (err, res) => {
-  if (err) {
-    console.error('Database connection test failed:', err);
-  } else {
-    console.log('Database connection test successful:', res.rows[0]);
-  }
-});
+// Test the connection on startup (skip in serverless to reduce cold start)
+if (!isServerless) {
+  pool.query('SELECT NOW()', (err, res) => {
+    if (err) {
+      console.error('Database connection test failed:', err);
+    } else {
+      console.log('Database connection test successful:', res.rows[0]);
+    }
+  });
+}
 
 // Pool is already exported above with 'export const pool'
