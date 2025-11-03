@@ -2,7 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "module": "ESNext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node16",
     "outDir": "dist",
     "noEmit": false,
     "allowImportingTsExtensions": false,
