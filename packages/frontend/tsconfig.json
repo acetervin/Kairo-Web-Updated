@@ -1,0 +1,25 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "lib": ["esnext", "dom", "dom.iterable"],
+    "jsx": "preserve",
+    "allowImportingTsExtensions": true,
+    "types": ["node", "vite/client"],
+    "baseUrl": ".",
+    "tsBuildInfoFile": "./.tsbuildinfo",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@boo-back/shared": ["../shared"],
+      "@boo-back/shared/*": ["../shared/*"],
+      "@shared": ["../shared"],
+      "@shared/*": ["../shared/*"]
+    }
+  },
+  "include": ["./src/**/*", "./index.html", "./vite.config.ts"],
+  "exclude": ["node_modules", "dist"],
+  "references": [
+    { "path": "../shared" }
+  ]
+}
+

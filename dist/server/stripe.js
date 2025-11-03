@@ -1,7 +1,12 @@
-import Stripe from 'stripe';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+// Use require to load Stripe so this built file works whether the stripe
+// package ships a default export or named exports (CJS/ESM interop).
+const StripePkg = require('stripe');
+const StripeCtor = (StripePkg && StripePkg.default) || StripePkg;
 import { pool } from './db.js';
 const stripeSecret = process.env.STRIPE_SECRET || '';
-const stripe = new Stripe(stripeSecret, { apiVersion: '2022-11-15' });
+const stripe = new StripeCtor(stripeSecret, { apiVersion: '2022-11-15' });
 // Create a PaymentIntent for a booking
 export async function createPaymentIntent(req, res) {
     try {

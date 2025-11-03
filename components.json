@@ -4,8 +4,8 @@
     "rsc": false,
     "tsx": true,
     "tailwind": {
-      "config": "tailwind.config.ts",
-      "css": "client/src/index.css",
+      "config": "packages/frontend/tailwind.config.ts",
+      "css": "packages/frontend/src/index.css",
       "baseColor": "neutral",
       "cssVariables": true,
       "prefix": ""
