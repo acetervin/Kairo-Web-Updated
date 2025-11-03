@@ -17,7 +17,9 @@ export function log(message: string, source = "express") {
 }
 
 export function serveStatic(app: express.Express) {
-  const distPath = path.resolve(__dirname, "..", "dist", "public");
+  // Frontend builds to root dist/public, backend compiles to packages/backend/dist
+  // So from packages/backend/dist/utils.js, we go up three levels to repo root, then into dist/public
+  const distPath = path.resolve(__dirname, "../../..", "dist", "public");
 
   if (!fs.existsSync(distPath)) {
     console.warn(
