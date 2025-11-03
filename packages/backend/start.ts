@@ -17,14 +17,16 @@ async function start() {
     // raw body capture for Stripe webhook is now handled in createApp()
     console.log('App created.');
     const argv = minimist(process.argv.slice(2));
-    // Backend runs on port 3000 by default, frontend on 5000
-    const port = argv.port || process.env.PORT || process.env.BACKEND_PORT || 3000;
+    // Allow port to be specified via argv, env vars, or use 0 to find an open port
+    const requestedPort = argv.port || process.env.PORT || process.env.BACKEND_PORT;
+    const port = requestedPort ? Number(requestedPort) : 0; // 0 = find an open port
 
     // In development, backend runs independently (frontend connects via proxy)
     // In production, backend serves static files
-    app.listen(port, '0.0.0.0', () => {
+    const server = app.listen(port, '0.0.0.0', () => {
+        const actualPort = (server.address() as { port: number })?.port || port;
         const mode = process.env.NODE_ENV === 'production' ? 'Production' : 'Development (API only)';
-        console.log(`${mode} server is running on http://0.0.0.0:${port}`);
+        console.log(`${mode} server is running on http://0.0.0.0:${actualPort}`);
         if (process.env.NODE_ENV !== 'production') {
             console.log('Frontend should run separately on port 5000');
         }
