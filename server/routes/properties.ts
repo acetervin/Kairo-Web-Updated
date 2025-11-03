@@ -3,6 +3,27 @@ import { pool } from '../db.js';
 
 const router = Router();
 
+// Health check endpoint to diagnose database issues
+router.get('/health', async (_req, res) => {
+  try {
+    // Test basic database connection
+    const result = await pool.query('SELECT NOW()');
+    res.json({ 
+      status: 'ok', 
+      database: 'connected',
+      timestamp: result.rows[0].now 
+    });
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : String(e);
+    res.status(500).json({ 
+      status: 'error',
+      database: 'disconnected',
+      error: errorMessage,
+      hasDatabaseUrl: !!(process.env.DATABASE_URL || process.env.DB_URL)
+    });
+  }
+});
+
 router.get('/', async (_req, res) => {
   try {
     const rows = await pool.query('SELECT * FROM properties WHERE is_active = true ORDER BY id');
@@ -44,7 +65,12 @@ router.get('/', async (_req, res) => {
 
     res.json({ properties });
   } catch (e) {
-    res.status(500).json({ error: 'failed to load properties' });
+    console.error('Error fetching properties:', e);
+    const errorMessage = e instanceof Error ? e.message : String(e);
+    res.status(500).json({ 
+      error: 'failed to load properties',
+      message: errorMessage 
+    });
   }
 });
 
