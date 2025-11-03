@@ -45,7 +45,7 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
 };
 import 'dotenv/config';
 import express from "express";
-import { serveStatic, log } from "./vite.js";
+import { serveStatic, log } from "./utils.js";
 import { securityHeaders } from "./middleware/securityHeaders.js";
 import { generalRateLimiter } from "./middleware/rateLimiter.js";
 // This function creates and configures the Express app.
