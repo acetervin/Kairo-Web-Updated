@@ -17,7 +17,7 @@
     }
   },
   "include": ["./**/*.ts"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "seed-db.ts", "vite.ts", "scripts/**/*"],
   "references": [
     { "path": "../shared" }
   ]

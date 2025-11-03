@@ -2,8 +2,10 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as dotenv from "dotenv";
 import { Pool } from "pg";
-import propertiesData from "../frontend/src/data/properties.json";
-import propertyImagesData from "../frontend/src/data/property-images.json";
+// JSON imports removed - this project now relies on Neon database fully
+// If you need to seed data, use the database directly or create seed scripts that query the database
+// import propertiesData from "../frontend/src/data/properties.json";
+// import propertyImagesData from "../frontend/src/data/property-images.json";
 
 dotenv.config();
 
@@ -38,7 +40,16 @@ async function seed() {
   const client = await pool.connect();
   try {
     console.log("Seeding properties...");
-
+    console.warn("WARNING: This seed script is deprecated. The project now relies on Neon database fully.");
+    console.warn("Please use the database directly to manage properties, or create new seed scripts that don't depend on JSON files.");
+    
+    // This script is no longer functional without JSON files
+    // If you need to seed data, create a new script or use database migrations
+    console.log("Seeding skipped - no JSON data available.");
+    console.log("To seed data, please use database migrations or create data directly in Neon database.");
+    
+    // Uncomment below if you have properties data from another source
+    /*
     // Clear existing data (developer/dev environment expectation)
     await client.query("BEGIN");
     await client.query("DELETE FROM properties");
@@ -87,6 +98,7 @@ async function seed() {
 
     // Fix sequence for properties.id
     await client.query(`SELECT setval(pg_get_serial_sequence('properties','id'), (SELECT COALESCE(MAX(id), 1) FROM properties))`);
+    */
 
     console.log("Seeding completed.");
   } catch (err) {
