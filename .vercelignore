@@ -1,0 +1,5 @@
+# Don't exclude dist folder - it's needed for serverless functions
+# Keep everything else ignored
+node_modules
+.env*
+
