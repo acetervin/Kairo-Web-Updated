@@ -1,15 +1,16 @@
 {
   "version": 2,
   "buildCommand": "npm run build:server",
-  "functions": {
-    "api/index.ts": {
-      "includeFiles": "dist/**"
-    }
-  },
   "builds": [
     {
       "src": "api/index.ts",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "dist/server/**",
+          "dist/shared/**"
+        ]
+      }
     },
     {
       "src": "package.json",
