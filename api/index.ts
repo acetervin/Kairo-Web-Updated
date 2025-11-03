@@ -1,10 +1,35 @@
-import { type Express } from 'express';
+import { type Express, type Request, type Response } from 'express';
 // @ts-ignore - dist/index.js is built at deployment time
 import { createApp } from '../dist/index.js';
 
 // This file serves as the entry point for the Vercel serverless function.
 // It creates the app instance on the first request and caches it for subsequent ones.
 let cachedApp: Express;
+
+// Helper function to wrap Express app call in a Promise
+// Vercel serverless functions must wait for the response to complete before the function exits
+// Express handles responses asynchronously, so we need to wait for res.end() to be called
+function promisifyHandler(app: Express, req: Request, res: Response): Promise<void> {
+  return new Promise((resolve, reject) => {
+    // Monitor when the response finishes
+    res.once('finish', resolve);
+    res.once('close', resolve);
+    res.once('error', reject);
+
+    // Call Express app handler - it will eventually call res.end() or res.send()
+    app(req, res, (err: any) => {
+      if (err) {
+        reject(err);
+      }
+      // If middleware chain completes without error but no response sent, resolve
+      // (Express might send response asynchronously via res.end())
+      if (!res.headersSent && !res.writableEnded) {
+        // Give Express a moment to send response, then resolve
+        setTimeout(resolve, 0);
+      }
+    });
+  });
+}
 
 export default async function handler(req: any, res: any) {
   try {
@@ -17,22 +42,17 @@ export default async function handler(req: any, res: any) {
       isVercel: !!process.env.VERCEL
     });
 
-    // Don't cache the app in production/Vercel environment
-    if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
-      const app = await createApp();
-      return app(req, res);
-    } else {
-      // Cache only in development
-      if (!cachedApp) {
-        console.log('Initializing server in development environment');
-        console.log('Database URL configured:', !!(process.env.DATABASE_URL || process.env.DB_URL));
-        console.log('Node ENV:', process.env.NODE_ENV);
-        
-        cachedApp = await createApp();
-        console.log('Server initialized successfully');
-      }
-      return cachedApp(req, res);
+    // Cache the app instance - Vercel can reuse function instances across requests
+    // This reduces cold start time for subsequent invocations
+    if (!cachedApp) {
+      console.log('Initializing Express app...');
+      console.log('Database URL configured:', !!(process.env.DATABASE_URL || process.env.DB_URL));
+      cachedApp = await createApp();
+      console.log('Express app initialized successfully');
     }
+
+    // Wait for Express to fully handle the request before the function exits
+    await promisifyHandler(cachedApp, req, res);
   } catch (error: unknown) {
     console.error('Error in Vercel handler:', error);
     
@@ -42,21 +62,24 @@ export default async function handler(req: any, res: any) {
     
     console.error('Error details:', { errorMessage, errorStack });
     
-    // Check if it's a database connection error
-    if (errorMessage.includes('DATABASE_URL') || errorMessage.includes('DB_URL')) {
-      return res.status(500).json({
-        error: 'Database Configuration Error',
-        message: 'DATABASE_URL environment variable is not configured. Please set it in Vercel project settings.',
-        hint: 'Go to Vercel Dashboard → Your Project → Settings → Environment Variables → Add DATABASE_URL'
+    // Only send error response if headers haven't been sent yet
+    if (!res.headersSent) {
+      // Check if it's a database connection error
+      if (errorMessage.includes('DATABASE_URL') || errorMessage.includes('DB_URL')) {
+        return res.status(500).json({
+          error: 'Database Configuration Error',
+          message: 'DATABASE_URL environment variable is not configured. Please set it in Vercel project settings.',
+          hint: 'Go to Vercel Dashboard → Your Project → Settings → Environment Variables → Add DATABASE_URL'
+        });
+      }
+      
+      // Ensure we always send a response even if there's an error
+      res.status(500).json({
+        error: 'Internal Server Error',
+        message: process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'development' ?
+          errorMessage :
+          'Failed to initialize server. Check Vercel function logs for details.'
       });
     }
-    
-    // Ensure we always send a response even if there's an error
-    res.status(500).json({
-      error: 'Internal Server Error',
-      message: process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'development' ?
-        errorMessage :
-        'Failed to initialize server. Check Vercel function logs for details.'
-    });
   }
 }
