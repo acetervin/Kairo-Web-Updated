@@ -17,19 +17,38 @@ async function start() {
     // raw body capture for Stripe webhook is now handled in createApp()
     console.log('App created.');
     const argv = minimist(process.argv.slice(2));
-    // Allow port to be specified via argv, env vars, or use 0 to find an open port
-    const requestedPort = argv.port || process.env.PORT || process.env.BACKEND_PORT;
-    const port = requestedPort ? Number(requestedPort) : 0; // 0 = find an open port
+    // Prioritize PORT (Render.com convention), then BACKEND_PORT, then argv.port, or use 0 to find an open port
+    const requestedPort = process.env.PORT || process.env.BACKEND_PORT || argv.port;
+    // Convert to number, or use 0 if not provided (0 = find an open port)
+    const port = requestedPort && requestedPort !== '' ? Number(requestedPort) : 0;
+    
+    if (port === 0 && process.env.NODE_ENV === 'production') {
+        console.warn('Warning: No PORT specified in production. Using auto-assigned port.');
+    }
+    console.log(`Attempting to listen on port: ${port === 0 ? 'auto (0)' : port}`);
+    if (process.env.PORT) {
+        console.log(`PORT environment variable: ${process.env.PORT}`);
+    }
 
     // In development, backend runs independently (frontend connects via proxy)
     // In production, backend serves static files
     const server = app.listen(port, '0.0.0.0', () => {
-        const actualPort = (server.address() as { port: number })?.port || port;
+        const address = server.address();
+        const actualPort = typeof address === 'object' && address ? address.port : port;
         const mode = process.env.NODE_ENV === 'production' ? 'Production' : 'Development (API only)';
         console.log(`${mode} server is running on http://0.0.0.0:${actualPort}`);
         if (process.env.NODE_ENV !== 'production') {
             console.log('Frontend should run separately on port 5000');
         }
+    });
+    
+    server.on('error', (err: Error & { code?: string }) => {
+        if (err.code === 'EADDRINUSE') {
+            console.error(`Port ${port} is already in use.`);
+        } else {
+            console.error('Server error:', err);
+        }
+        process.exit(1);
     });
     // Optional: automatic calendar sync if interval set
     try {
