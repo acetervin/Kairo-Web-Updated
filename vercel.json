@@ -1,10 +1,12 @@
 {
   "version": 2,
+  "buildCommand": "tsc -p tsconfig.server.json && tsc-alias -p tsconfig.server.json",
   "builds": [
     {
       "src": "api/index.ts",
       "use": "@vercel/node",
       "config": {
+        "buildCommand": "tsc -p tsconfig.server.json && tsc-alias -p tsconfig.server.json",
         "includeFiles": [
           "dist/**"
         ]

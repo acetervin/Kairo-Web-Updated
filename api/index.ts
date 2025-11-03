@@ -1,6 +1,6 @@
 import { type Express, type Request, type Response } from 'express';
-// @ts-ignore - dist/index.js is built at deployment time
-import { createApp } from '../dist/index.js';
+// @ts-ignore - dist/server/index.js is built at deployment time
+import { createApp } from '../dist/server/index.js';
 
 // This file serves as the entry point for the Vercel serverless function.
 // It creates the app instance on the first request and caches it for subsequent ones.
