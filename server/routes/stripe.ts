@@ -1,7 +1,7 @@
 
 import { Router } from 'express';
 import express from 'express';
-import { createCheckoutSession, createBookingAndCheckout, stripeWebhook } from '../stripe';
+import { createCheckoutSession, createBookingAndCheckout, stripeWebhook } from '../stripe.js';
 
 const router = Router();
 

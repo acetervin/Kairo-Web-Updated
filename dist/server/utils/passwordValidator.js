@@ -1,5 +1,5 @@
 export function validatePassword(password) {
-    var errors = [];
+    const errors = [];
     if (!password) {
         return {
             isValid: false,
@@ -31,7 +31,7 @@ export function validatePassword(password) {
         errors.push('Password must contain at least one special character (!@#$%^&*()_+-=[]{}|\'";:,.<>?)');
     }
     // Check for common passwords (basic check)
-    var commonPasswords = [
+    const commonPasswords = [
         'password',
         '12345678',
         'qwerty',
@@ -40,12 +40,12 @@ export function validatePassword(password) {
         'admin',
         'letmein',
     ];
-    if (commonPasswords.some(function (common) { return password.toLowerCase().includes(common); })) {
+    if (commonPasswords.some((common) => password.toLowerCase().includes(common))) {
         errors.push('Password cannot contain common words or patterns');
     }
     return {
         isValid: errors.length === 0,
-        errors: errors,
+        errors,
     };
 }
 export function sanitizeInput(input) {

@@ -1,6 +1,6 @@
 import { pgTable, text, serial, integer, boolean, decimal, timestamp, jsonb, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
-export var properties = pgTable("properties", {
+export const properties = pgTable("properties", {
     id: serial("id").primaryKey(),
     name: text("name").notNull(),
     description: text("description").notNull(),
@@ -21,9 +21,9 @@ export var properties = pgTable("properties", {
     removed_at: timestamp("removed_at"),
     map_url: text("map_url"),
 });
-export var bookings = pgTable("bookings", {
+export const bookings = pgTable("bookings", {
     id: serial("id").primaryKey(),
-    propertyId: integer("property_id").references(function () { return properties.id; }).notNull(),
+    propertyId: integer("property_id").references(() => properties.id).notNull(),
     guestName: text("guest_name").notNull(),
     guestEmail: text("guest_email").notNull(),
     guestPhone: text("guest_phone").notNull(),
@@ -47,36 +47,36 @@ export var bookings = pgTable("bookings", {
     removed_at: timestamp("removed_at"),
 });
 // Calendar sync table for external booking platforms
-export var calendarSync = pgTable("calendar_sync", {
+export const calendarSync = pgTable("calendar_sync", {
     id: serial("id").primaryKey(),
-    propertyId: integer("property_id").references(function () { return properties.id; }).notNull(),
+    propertyId: integer("property_id").references(() => properties.id).notNull(),
     platform: text("platform").notNull(), // 'booking.com', 'airbnb', 'manual'
     externalCalendarUrl: text("external_calendar_url"), // iCal URL for sync
     lastSyncAt: timestamp("last_sync_at"),
     syncStatus: text("sync_status").default("pending"), // 'pending', 'success', 'failed'
     syncErrors: text("sync_errors"),
-    bookingId: integer("booking_id").references(function () { return bookings.id; }),
+    bookingId: integer("booking_id").references(() => bookings.id),
     isActive: boolean("is_active").notNull().default(true),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
 });
 // Blocked dates for properties (from external calendars or manual entry)
-export var blockedDates = pgTable("blocked_dates", {
+export const blockedDates = pgTable("blocked_dates", {
     id: serial("id").primaryKey(),
-    propertyId: integer("property_id").references(function () { return properties.id; }).notNull(),
+    propertyId: integer("property_id").references(() => properties.id).notNull(),
     startDate: timestamp("start_date").notNull(),
     endDate: timestamp("end_date").notNull(),
     reason: text("reason").notNull(), // 'booking', 'maintenance', 'personal_use', 'external_booking'
     source: text("source").default("manual"), // 'manual', 'booking.com', 'airbnb', 'direct_booking'
-    bookingId: integer("booking_id").references(function () { return bookings.id; }),
+    bookingId: integer("booking_id").references(() => bookings.id),
     externalId: text("external_id"), // External calendar event UID for sync
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
     isActive: boolean("is_active").notNull().default(true),
-}, function (table) { return ({
+}, (table) => ({
     uniqueBookingId: unique("blocked_dates_booking_id_unique").on(table.bookingId),
-}); });
-export var contactMessages = pgTable("contact_messages", {
+}));
+export const contactMessages = pgTable("contact_messages", {
     id: serial("id").primaryKey(),
     firstName: text("first_name").notNull(),
     lastName: text("last_name").notNull(),
@@ -88,23 +88,23 @@ export var contactMessages = pgTable("contact_messages", {
     is_active: boolean("is_active").notNull().default(true),
     removed_at: timestamp("removed_at"),
 });
-export var insertPropertySchema = createInsertSchema(properties).omit({
+export const insertPropertySchema = createInsertSchema(properties).omit({
     id: true,
 });
-export var insertBookingSchema = createInsertSchema(bookings).omit({
-    id: true,
-    createdAt: true,
-});
-export var insertContactMessageSchema = createInsertSchema(contactMessages).omit({
+export const insertBookingSchema = createInsertSchema(bookings).omit({
     id: true,
     createdAt: true,
 });
-export var insertCalendarSyncSchema = createInsertSchema(calendarSync).omit({
+export const insertContactMessageSchema = createInsertSchema(contactMessages).omit({
+    id: true,
+    createdAt: true,
+});
+export const insertCalendarSyncSchema = createInsertSchema(calendarSync).omit({
     id: true,
     createdAt: true,
     updatedAt: true,
 });
-export var insertBlockedDateSchema = createInsertSchema(blockedDates).omit({
+export const insertBlockedDateSchema = createInsertSchema(blockedDates).omit({
     id: true,
     createdAt: true,
 });
