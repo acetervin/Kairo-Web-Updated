@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import express, { type Express, type Request, Response, NextFunction } from "express";
-import { serveStatic, log } from "./vite.js";
+import { serveStatic, log } from "./utils.js";
 import { securityHeaders } from "./middleware/securityHeaders.js";
 import { generalRateLimiter } from "./middleware/rateLimiter.js";
 

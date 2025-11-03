@@ -9,7 +9,8 @@
         "includeFiles": [
           "dist/server/**",
           "dist/shared/**"
-        ]
+        ],
+        "maxLambdaSize": "50mb"
       }
     },
     {
