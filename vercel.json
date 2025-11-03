@@ -10,6 +10,13 @@
           "dist/server/**",
           "dist/shared/**"
         ],
+        "excludeFiles": [
+          "dist/server/vite.js",
+          "dist/server/start.js",
+          "node_modules/vite/**",
+          "node_modules/rollup/**",
+          "node_modules/@rollup/**"
+        ],
         "maxLambdaSize": "50mb"
       }
     },
