@@ -94,8 +94,10 @@ export async function createApp(): Promise<Express> {
         // @ts-ignore
         const stripeRoutes = (await import('./routes/stripe.js')).default;
         app.use('/api/stripe', stripeRoutes);
+        console.log('✅ Stripe routes registered successfully');
     } catch (e) {
-        console.error('Failed to register stripe routes', e);
+        console.error('❌ Failed to register stripe routes:', e);
+        console.error('This may be because the routes were not compiled. Make sure to run: npm run build --workspace=@boo-back/backend');
     }
 
     try {

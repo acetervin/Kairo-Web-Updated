@@ -28,10 +28,21 @@ export function serveStatic(app: express.Express) {
     return;
   }
 
-  app.use(express.static(distPath));
+  // Serve static files, but exclude API routes
+  const staticMiddleware = express.static(distPath);
+  app.use((req, res, next) => {
+    if (req.path.startsWith("/api/")) {
+      return next();
+    }
+    staticMiddleware(req, res, next);
+  });
 
-  // fall through to index.html if the file doesn't exist
-  app.use("*", (_req, res) => {
+  // fall through to index.html if the file doesn't exist, but exclude API routes
+  app.use("*", (req, res, next) => {
+    // Don't serve index.html for API routes - let them return 404 or be handled by API routes
+    if (req.path.startsWith("/api/")) {
+      return next();
+    }
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }
