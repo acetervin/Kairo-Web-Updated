@@ -258,7 +258,18 @@ Please let me know availability and next steps. Thank you!`;
         const contentType = response.headers.get('content-type') || '';
         if (!contentType.includes('application/json')) {
           const text = await response.text();
-          throw new Error(`Invalid response content-type: ${contentType} - ${text}`);
+          // Check if we got HTML (likely due to misconfigured API URL or routing issue)
+          if (contentType.includes('text/html')) {
+            const apiBaseUrl = apiUrl('/');
+            throw new Error(
+              `API endpoint returned HTML instead of JSON. This usually means:\n` +
+              `1. VITE_API_URL is not configured in your Vercel environment variables, OR\n` +
+              `2. The API request is being routed incorrectly.\n` +
+              `Current API base URL: ${apiBaseUrl || '(empty - using relative paths)'}\n` +
+              `Please configure VITE_API_URL in Vercel project settings.`
+            );
+          }
+          throw new Error(`Invalid response content-type: ${contentType}`);
         }
         const result = await response.json();
         if (result.url) {
