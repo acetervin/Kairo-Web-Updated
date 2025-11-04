@@ -7,9 +7,12 @@ import type StripeType from 'stripe';
 
 // Lazy initialization of Stripe client to avoid circular dependency issues
 // This is loaded only when needed, breaking potential module cycles
-let stripeInstance: Stripe | null = null;
+// Instance type for the runtime Stripe client (type-only from package)
+type StripeClient = StripeType;
 
-function getStripe(): Stripe {
+let stripeInstance: StripeClient | null = null;
+
+function getStripe(): StripeClient {
   if (stripeInstance) {
     return stripeInstance;
   }
@@ -19,7 +22,8 @@ function getStripe(): Stripe {
     throw new Error('STRIPE_SECRET environment variable is required');
   }
   
-  stripeInstance = new Stripe(stripeSecret, { apiVersion: '2022-11-15' });
+  // new Stripe(...) returns the runtime instance; cast to the typed instance
+  stripeInstance = new Stripe(stripeSecret, { apiVersion: '2022-11-15' }) as StripeClient;
   return stripeInstance;
 }
 

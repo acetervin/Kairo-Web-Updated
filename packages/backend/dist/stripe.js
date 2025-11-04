@@ -1,7 +1,7 @@
 import { pool } from './db.js';
-import Stripe from 'stripe';
-// Lazy initialization of Stripe client to avoid circular dependency issues
-// This is loaded only when needed, breaking potential module cycles
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const Stripe = require('stripe');
 let stripeInstance = null;
 function getStripe() {
     if (stripeInstance) {
@@ -11,6 +11,7 @@ function getStripe() {
     if (!stripeSecret) {
         throw new Error('STRIPE_SECRET environment variable is required');
     }
+    // new Stripe(...) returns the runtime instance; cast to the typed instance
     stripeInstance = new Stripe(stripeSecret, { apiVersion: '2022-11-15' });
     return stripeInstance;
 }
