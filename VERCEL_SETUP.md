@@ -14,18 +14,28 @@
    vercel --prod
    ```
 
-2. **Set Environment Variable in Vercel Dashboard:**
+2. **Configure Vercel Project Settings:**
    - Go to your project on https://vercel.com
+   - Navigate to **Settings** → **Build and Deployment**
+   - **Option A (Recommended):** Set Root Directory to `.` (empty/root)
+     - **Output Directory:** `dist/public`
+     - **Build Command:** `npm install && npm run build --workspace=@boo-back/frontend`
+   - **Option B:** Keep Root Directory as `packages/frontend`
+     - **Output Directory:** `../../dist/public`
+     - **Build Command:** `npm install && npm run build --workspace=@boo-back/frontend`
+   - Save the settings
+
+3. **Set Environment Variable in Vercel Dashboard:**
    - Navigate to **Settings** → **Environment Variables**
    - Add: `VITE_API_URL` = `https://your-backend.onrender.com`
      - Replace with your actual Render backend URL
    - Apply to: Production, Preview, and Development
 
-3. **Update Backend CORS:**
+4. **Update Backend CORS:**
    - In Render dashboard, update `CORS_ORIGINS` environment variable
    - Add your Vercel domain: `https://your-app.vercel.app`
 
-4. **Redeploy:**
+5. **Redeploy:**
    - After setting environment variables, redeploy from Vercel dashboard
 
 ## What Changed
