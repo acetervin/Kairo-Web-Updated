@@ -34,6 +34,7 @@ import GuestSelectionPopover from "@/components/GuestSelectionPopover";
 import type { Property } from "@boo-back/shared/schema";
 import { getProperty } from "@/data/properties";
 import { motion, AnimatePresence } from "framer-motion";
+import { apiUrl } from "@/utils/apiConfig";
 
 let unavailableDatesStatic: Date[] = [];
 
@@ -102,7 +103,7 @@ export default function BookingPage() {
     async function loadBlocked() {
       if (!propertyId) return;
       try {
-        const res = await fetch(`/api/properties/${propertyId}/blocked-dates`);
+        const res = await fetch(apiUrl(`/api/properties/${propertyId}/blocked-dates`));
         if (!res.ok) return;
         const data = await res.json();
         const dates: Date[] = [];
@@ -244,7 +245,7 @@ Please let me know availability and next steps. Thank you!`;
 
     try {
       if (selectedPaymentType === 'stripe') {
-        const response = await fetch('/api/stripe/create-booking-checkout', {
+        const response = await fetch(apiUrl('/api/stripe/create-booking-checkout'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ amount: total, currency: 'KES', bookingData }),

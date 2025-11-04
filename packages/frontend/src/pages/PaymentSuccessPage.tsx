@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, Home, Calendar, MapPin } from 'lucide-react';
 import PaymentSuccessSkeleton from '@/components/skeletons/PaymentSuccessSkeleton';
+import { apiUrl } from '@/utils/apiConfig';
 
 export default function PaymentSuccessPage() {
   const [location] = useLocation();
@@ -36,7 +37,7 @@ export default function PaymentSuccessPage() {
 
     const fetchOnce = async () => {
       try {
-        const res = await fetch(`/api/bookings/${pendingId}`);
+        const res = await fetch(apiUrl(`/api/bookings/${pendingId}`));
         if (!res.ok) throw new Error('Failed to load booking');
         const data = await res.json();
 
@@ -79,7 +80,7 @@ export default function PaymentSuccessPage() {
     const loadProperty = async () => {
       if (!booking?.property_id) return;
       try {
-        const res = await fetch(`/api/properties/${booking.property_id}`);
+        const res = await fetch(apiUrl(`/api/properties/${booking.property_id}`));
         if (!res.ok) return;
         const prop = await res.json();
         if (prop && prop.name) setPropertyName(prop.name);

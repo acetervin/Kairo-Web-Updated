@@ -45,6 +45,7 @@ import {
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { apiUrl } from '@/utils/apiConfig';
 
 interface AdminUser {
   id: number;
@@ -73,7 +74,7 @@ export default function AdminUsers() {
   const { data: users, isLoading } = useQuery<AdminUser[]>({
     queryKey: ['admin-users'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/users', {
+      const response = await fetch(apiUrl('/api/admin/users'), {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('admin-token')}`,
         },
@@ -85,7 +86,7 @@ export default function AdminUsers() {
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await fetch('/api/admin/users', {
+      const response = await fetch(apiUrl('/api/admin/users'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -116,7 +117,7 @@ export default function AdminUsers() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: any }) => {
-      const response = await fetch(`/api/admin/users/${id}`, {
+      const response = await fetch(apiUrl(`/api/admin/users/${id}`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -147,7 +148,7 @@ export default function AdminUsers() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await fetch(`/api/admin/users/${id}`, {
+      const response = await fetch(apiUrl(`/api/admin/users/${id}`), {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('admin-token')}`,

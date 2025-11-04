@@ -19,6 +19,7 @@ import { ArrowLeft, Save, Upload, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Property } from '@boo-back/shared/schema';
+import { apiUrl } from '@/utils/apiConfig';
 
 export default function PropertyForm() {
   const [, params] = useRoute('/admin/properties/edit/:id');
@@ -52,7 +53,7 @@ export default function PropertyForm() {
   const { data: property, isLoading } = useQuery<Property>({
     queryKey: ['property', params?.id],
     queryFn: async () => {
-      const response = await fetch(`/api/properties/${params?.id}`);
+      const response = await fetch(apiUrl(`/api/properties/${params?.id}`));
       if (!response.ok) throw new Error('Failed to fetch property');
       return response.json();
     },
@@ -96,7 +97,7 @@ export default function PropertyForm() {
         throw new Error('Not authenticated. Please log in again.');
       }
       
-      const response = await fetch(url, {
+      const response = await fetch(apiUrl(url), {
         method: isEditMode ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -254,7 +255,7 @@ export default function PropertyForm() {
   const { data: imagesData, refetch: refetchImages } = useQuery<{ images: any[] }>({
     queryKey: ['property-images', params?.id],
     queryFn: async () => {
-      const res = await fetch(`/api/admin/properties/${params?.id}/images`, {
+      const res = await fetch(apiUrl(`/api/admin/properties/${params?.id}/images`), {
         headers: { Authorization: `Bearer ${localStorage.getItem('admin-token')}` },
       });
       if (!res.ok) throw new Error('Failed to load images');
@@ -265,7 +266,7 @@ export default function PropertyForm() {
 
   const addImage = useMutation({
     mutationFn: async () => {
-      const res = await fetch(`/api/admin/properties/${params?.id}/images`, {
+      const res = await fetch(apiUrl(`/api/admin/properties/${params?.id}/images`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('admin-token')}` },
         body: JSON.stringify({ url: newImageUrl.trim(), category: newImageCategory }),
@@ -281,7 +282,7 @@ export default function PropertyForm() {
 
   const deleteImage = useMutation({
     mutationFn: async (imageId: number) => {
-      const res = await fetch(`/api/admin/properties/${params?.id}/images/${imageId}`, {
+      const res = await fetch(apiUrl(`/api/admin/properties/${params?.id}/images/${imageId}`), {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${localStorage.getItem('admin-token')}` },
       });

@@ -2,6 +2,7 @@ import { useEffect, useState, ReactNode } from 'react';
 import { useLocation } from 'wouter';
 import LoadingScreen from '@/components/LoadingScreen';
 import { refreshToken } from '@/utils/tokenRefresh';
+import { apiUrl } from '@/utils/apiConfig';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -22,7 +23,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
       // Verify token is valid by making a request to a protected endpoint
       try {
-        const response = await fetch('/api/admin/stats', {
+        const response = await fetch(apiUrl('/api/admin/stats'), {
           headers: {
             Authorization: `Bearer ${token}`,
           },

@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
+import { apiUrl } from '@/utils/apiConfig';
 import LoadingScreen from "@/components/LoadingScreen";
 import Home from "@/pages/Home";
 import Properties from "@/pages/Properties";
@@ -135,7 +136,7 @@ export default function App() {
         await queryClient.prefetchQuery({
           queryKey: ['properties', 'all'],
           queryFn: async () => {
-            const response = await fetch('/api/properties');
+            const response = await fetch(apiUrl('/api/properties'));
             if (!response.ok) return [];
             const data = await response.json();
             return data.properties || [];

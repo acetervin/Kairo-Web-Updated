@@ -31,6 +31,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import type { Property } from '@boo-back/shared/schema';
+import { apiUrl } from '@/utils/apiConfig';
 
 export default function AdminProperties() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -40,7 +41,7 @@ export default function AdminProperties() {
   const { data: properties, isLoading } = useQuery<Property[]>({
     queryKey: ['admin-properties'],
     queryFn: async () => {
-      const response = await fetch('/api/properties');
+      const response = await fetch(apiUrl('/api/properties'));
       if (!response.ok) throw new Error('Failed to fetch properties');
       const data = await response.json();
       // API returns { properties: [...] } so we need to extract the array
@@ -50,7 +51,7 @@ export default function AdminProperties() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await fetch(`/api/admin/properties/${id}`, {
+      const response = await fetch(apiUrl(`/api/admin/properties/${id}`), {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('admin-token')}`,

@@ -4,6 +4,7 @@
  */
 
 import { refreshToken } from './tokenRefresh';
+import { apiUrl } from './apiConfig';
 
 // Store original fetch for interceptor
 const originalFetch = window.fetch;
@@ -15,6 +16,9 @@ export async function apiFetch(
 ): Promise<Response> {
   const token = localStorage.getItem('admin-token');
   
+  // Convert relative URLs to absolute if needed
+  const fullUrl = url.startsWith('http') ? url : apiUrl(url);
+  
   // Add authorization header if token exists
   const headers = new Headers(options.headers);
   if (token) {
@@ -22,7 +26,7 @@ export async function apiFetch(
   }
 
   // Make the request
-  let response = await originalFetch(url, {
+  let response = await originalFetch(fullUrl, {
     ...options,
     headers,
   });
@@ -36,7 +40,7 @@ export async function apiFetch(
       const newToken = localStorage.getItem('admin-token');
       if (newToken) {
         headers.set('Authorization', `Bearer ${newToken}`);
-        response = await originalFetch(url, {
+        response = await originalFetch(fullUrl, {
           ...options,
           headers,
         });

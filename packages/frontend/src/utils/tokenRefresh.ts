@@ -3,6 +3,8 @@
  * Automatically refreshes JWT tokens before they expire
  */
 
+import { apiUrl } from './apiConfig';
+
 // Check token expiration and refresh if needed (within 1 hour of expiry)
 export async function checkAndRefreshToken(): Promise<boolean> {
   const token = localStorage.getItem('admin-token');
@@ -41,7 +43,7 @@ export async function refreshToken(): Promise<boolean> {
   }
 
   try {
-    const response = await fetch('/api/admin/refresh', {
+    const response = await fetch(apiUrl('/api/admin/refresh'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

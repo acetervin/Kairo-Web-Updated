@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { Lock, User, MapPin, AlertCircle, Clock } from 'lucide-react';
+import { apiUrl } from '@/utils/apiConfig';
 
 export default function AdminLogin() {
   const [, setLocation] = useLocation();
@@ -25,7 +26,7 @@ export default function AdminLogin() {
     const token = localStorage.getItem('admin-token');
     if (token) {
       // Verify token is still valid
-      fetch('/api/admin/stats', {
+      fetch(apiUrl('/api/admin/stats'), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -93,7 +94,7 @@ export default function AdminLogin() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/admin/login', {
+      const response = await fetch(apiUrl('/api/admin/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials),

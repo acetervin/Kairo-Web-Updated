@@ -3,12 +3,13 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, Calendar, DollarSign, TrendingUp, Users, Eye } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { apiUrl } from '@/utils/apiConfig';
 
 export default function AdminDashboard() {
   const { data: stats } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/stats', {
+      const response = await fetch(apiUrl('/api/admin/stats'), {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('admin-token')}`,
         },

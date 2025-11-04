@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { apiUrl } from "@/utils/apiConfig";
 
 interface MpesaButtonProps {
   amount: string;
@@ -16,7 +17,7 @@ export default function MpesaButton({ amount, currency, intent }: MpesaButtonPro
       currency: currency,
       intent: intent,
     };
-    const response = await fetch("/api/mpesa/order", {
+    const response = await fetch(apiUrl("/api/mpesa/order"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(orderPayload),
@@ -26,7 +27,7 @@ export default function MpesaButton({ amount, currency, intent }: MpesaButtonPro
   };
 
   const captureOrder = async (orderId: string) => {
-    const response = await fetch(`/api/mpesa/order/${orderId}/capture`, {
+    const response = await fetch(apiUrl(`/api/mpesa/order/${orderId}/capture`), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -1,6 +1,7 @@
 
 import { Home, Building2, Castle, MapPin, Palmtree, Waves } from "lucide-react";
 import { Property } from '@boo-back/shared/schema';
+import { apiUrl } from '../utils/apiConfig';
 
 // Property categories with icons for navigation and filtering
 export const propertyCategories = [
@@ -14,7 +15,7 @@ export const propertyCategories = [
 ];
 
 export async function getProperties(category?: string, featured?: boolean): Promise<Property[]> {
-  const res = await fetch('/api/properties');
+  const res = await fetch(apiUrl('/api/properties'));
   if (!res.ok) return [];
   const data = await res.json();
   let list: any[] = (data.properties || []).filter((p: any) => p.is_active);
@@ -24,7 +25,7 @@ export async function getProperties(category?: string, featured?: boolean): Prom
 }
 
 export async function getProperty(id: number): Promise<Property | undefined> {
-  const res = await fetch(`/api/properties/${id}`);
+  const res = await fetch(apiUrl(`/api/properties/${id}`));
   if (!res.ok) return undefined;
   const property = await res.json();
   if (!property || property.is_active === false) return undefined;

@@ -51,6 +51,7 @@ import {
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { apiUrl } from '@/utils/apiConfig';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface Booking {
@@ -101,7 +102,7 @@ export default function AdminBookings() {
   const { data: bookings, isLoading } = useQuery<Booking[]>({
     queryKey: ['admin-bookings'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/bookings', {
+      const response = await fetch(apiUrl('/api/admin/bookings'), {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('admin-token')}`,
         },
@@ -113,7 +114,7 @@ export default function AdminBookings() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: any }) => {
-      const response = await fetch(`/api/admin/bookings/${id}`, {
+      const response = await fetch(apiUrl(`/api/admin/bookings/${id}`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -162,7 +163,7 @@ export default function AdminBookings() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await fetch(`/api/admin/bookings/${id}`, {
+      const response = await fetch(apiUrl(`/api/admin/bookings/${id}`), {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('admin-token')}`,
@@ -199,7 +200,7 @@ export default function AdminBookings() {
     // Check for date conflicts when opening the dialog
     setIsCheckingConflicts(true);
     try {
-      const response = await fetch(`/api/admin/bookings/${booking.id}/check-conflicts`, {
+      const response = await fetch(apiUrl(`/api/admin/bookings/${booking.id}/check-conflicts`), {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('admin-token')}`,
         },

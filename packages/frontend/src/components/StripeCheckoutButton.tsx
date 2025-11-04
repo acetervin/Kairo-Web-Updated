@@ -1,5 +1,6 @@
 
 import { Button } from './ui/button';
+import { apiUrl } from '@/utils/apiConfig';
 
 interface StripeCheckoutButtonProps {
   bookingData: any;
@@ -9,7 +10,7 @@ interface StripeCheckoutButtonProps {
 export function StripeCheckoutButton({ bookingData, disabled }: StripeCheckoutButtonProps) {
   const handleCheckout = async () => {
     try {
-      const response = await fetch('/api/stripe/create-booking-checkout', {
+      const response = await fetch(apiUrl('/api/stripe/create-booking-checkout'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
