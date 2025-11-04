@@ -31,9 +31,18 @@
      - Replace with your actual Render backend URL
    - Apply to: Production, Preview, and Development
 
-4. **Update Backend CORS:**
-   - In Render dashboard, update `CORS_ORIGINS` environment variable
-   - Add your Vercel domain: `https://your-app.vercel.app`
+4. **Update Backend CORS (CRITICAL):**
+   - Go to your Render dashboard
+   - Navigate to your backend service → **Environment** tab
+   - Find the `CORS_ORIGINS` environment variable
+   - Update it to include your Vercel domain(s):
+     ```
+     http://localhost:5000,http://127.0.0.1:5000,https://kairo-web-updated.vercel.app,https://kairo-web-updated-*.vercel.app
+     ```
+     - Replace `kairo-web-updated` with your actual Vercel project name
+     - The `*.vercel.app` pattern allows preview deployments
+   - **Save the changes** - Render will automatically restart your service
+   - Wait for the service to restart (usually 1-2 minutes)
 
 5. **Redeploy:**
    - After setting environment variables, redeploy from Vercel dashboard

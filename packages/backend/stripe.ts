@@ -1,17 +1,25 @@
 import { Request, Response } from 'express';
 import { pool } from './db.js';
-// Use Node's createRequire to synchronously load Stripe in a way that's
-// compatible with both CJS and ESM package distributions. This avoids
-// runtime issues where the module doesn't export a default constructor.
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const StripePkg = require('stripe');
-const Stripe = (StripePkg && (StripePkg as any).default) || StripePkg;
+import Stripe from 'stripe';
 import type StripeType from 'stripe';
 
-const stripeSecret = process.env.STRIPE_SECRET || '';
-const stripe = new Stripe(stripeSecret, { apiVersion: '2022-11-15' });
+// Lazy initialization of Stripe client to avoid circular dependency issues
+// This is loaded only when needed, breaking potential module cycles
+let stripeInstance: Stripe | null = null;
+
+function getStripe(): Stripe {
+  if (stripeInstance) {
+    return stripeInstance;
+  }
+  
+  const stripeSecret = process.env.STRIPE_SECRET || '';
+  if (!stripeSecret) {
+    throw new Error('STRIPE_SECRET environment variable is required');
+  }
+  
+  stripeInstance = new Stripe(stripeSecret, { apiVersion: '2022-11-15' });
+  return stripeInstance;
+}
 
 // Create a PaymentIntent for a booking
 export async function createPaymentIntent(req: Request, res: Response) {
@@ -23,7 +31,7 @@ export async function createPaymentIntent(req: Request, res: Response) {
     // For KES assume 100 cents per KES (if KES uses two decimal places); adjust if needed.
     const amountMinor = Math.round(Number(amount) * 100);
 
-    const paymentIntent = await stripe.paymentIntents.create({
+    const paymentIntent = await getStripe().paymentIntents.create({
       amount: amountMinor,
       currency: currency.toLowerCase(),
       // optionally include metadata to connect to bookings
@@ -52,7 +60,7 @@ export async function createCheckoutSession(req: Request, res: Response) {
 
     const frontend = process.env.FRONTEND_URL || 'http://localhost:5000';
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
       line_items: [
@@ -158,7 +166,7 @@ export async function createBookingAndCheckout(req: Request, res: Response) {
     const amountMinor = Math.round(Number(amount) * 100);
     const frontend = process.env.FRONTEND_URL || 'http://localhost:5000';
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
       line_items: [
@@ -206,7 +214,7 @@ export async function stripeWebhook(req: Request, res: Response) {
     // The raw middleware from express.raw() provides req.body as a Buffer
     // constructEvent requires the exact signed payload as a Buffer or string
     const rawBody = req.body;
-    event = stripe.webhooks.constructEvent(rawBody, sig!, webhookSecret);
+    event = getStripe().webhooks.constructEvent(rawBody, sig!, webhookSecret);
     console.log('✅ Webhook signature verified. Event type:', event.type);
   } catch (err: any) {
     console.error('❌ Webhook signature verification failed', err);
