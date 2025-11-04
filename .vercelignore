@@ -2,7 +2,7 @@
 # Vercel will automatically exclude devDependencies from serverless functions
 node_modules
 .env*
-# Exclude vite-related files from serverless function (only needed for build)
-vite.config.*
+# Exclude compiled vite.config.js from serverless functions (vite.config.ts is needed for build)
+dist/**/vite.config.js
 client/**
 

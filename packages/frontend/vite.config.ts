@@ -20,12 +20,12 @@ export default defineConfig({
     },
   },
   resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "src"),
-      "@boo-back/shared": path.resolve(__dirname, "../shared"),
-      "@shared": path.resolve(__dirname, "../shared"),
-      "@assets": path.resolve(__dirname, "../../attached_assets"),
-    },
+    alias: [
+      { find: "@", replacement: path.resolve(__dirname, "./src") },
+      { find: "@boo-back/shared", replacement: path.resolve(__dirname, "../shared") },
+      { find: "@shared", replacement: path.resolve(__dirname, "../shared") },
+      { find: "@assets", replacement: path.resolve(__dirname, "../../attached_assets") },
+    ],
   },
   root: path.resolve(__dirname),
   build: {
