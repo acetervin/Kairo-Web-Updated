@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { pool } from './db.js';
-import Stripe from 'stripe';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const Stripe = require('stripe');
 import type StripeType from 'stripe';
 
 // Lazy initialization of Stripe client to avoid circular dependency issues
