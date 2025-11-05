@@ -1,6 +1,6 @@
-import { pool } from '../db.js';
+const { pool } = require('../db');
 
-export enum AuditEventType {
+enum AuditEventType {
   LOGIN_SUCCESS = 'LOGIN_SUCCESS',
   LOGIN_FAILURE = 'LOGIN_FAILURE',
   LOGIN_LOCKOUT = 'LOGIN_LOCKOUT',
@@ -17,7 +17,7 @@ export enum AuditEventType {
   UNAUTHORIZED_ACCESS = 'UNAUTHORIZED_ACCESS',
 }
 
-export interface AuditLog {
+interface AuditLog {
   event_type: AuditEventType;
   user_id?: number;
   username?: string;
@@ -42,7 +42,7 @@ function sanitizeForConsole(log: AuditLog): Partial<AuditLog> {
   };
 }
 
-export async function logAuditEvent(log: AuditLog): Promise<void> {
+async function logAuditEvent(log: AuditLog): Promise<void> {
   try {
     await pool.query(`
       INSERT INTO audit_logs (event_type, user_id, username, ip_address, user_agent, details, success, created_at)
@@ -78,7 +78,7 @@ export async function logAuditEvent(log: AuditLog): Promise<void> {
   }
 }
 
-export function getClientIp(req: any): string {
+function getClientIp(req: any): string {
   return (
     req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
     req.headers['x-real-ip'] ||
@@ -88,7 +88,8 @@ export function getClientIp(req: any): string {
   );
 }
 
-export function getUserAgent(req: any): string {
+function getUserAgent(req: any): string {
   return req.headers['user-agent'] || 'unknown';
 }
 
+module.exports = { logAuditEvent, AuditEventType, getClientIp, getUserAgent };

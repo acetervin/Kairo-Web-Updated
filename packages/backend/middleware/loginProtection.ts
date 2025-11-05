@@ -1,6 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import { checkAccountLockout, checkAccountLockoutSync } from './accountLockout.js';
-import { sanitizeInput } from '../utils/passwordValidator.js';
+const { checkAccountLockout, checkAccountLockoutSync } = require('./accountLockout');
+const { sanitizeInput } = require('../utils/passwordValidator');
 
 interface RateLimitStore {
   [key: string]: {
@@ -27,7 +26,7 @@ setInterval(() => {
  * Account lockout takes precedence - if account is locked, return 423 immediately
  * For rate limiting, check lockout status before sending 429 response
  */
-export function loginProtectionMiddleware(req: Request, res: Response, next: NextFunction) {
+function loginProtectionMiddleware(req: any, res: any, next: any) {
   const username = sanitizeInput(req.body?.username || '');
   const windowMs = 15 * 60 * 1000; // 15 minutes
   const maxRequests = 5; // 5 attempts per 15 minutes
@@ -140,3 +139,5 @@ export function loginProtectionMiddleware(req: Request, res: Response, next: Nex
     next();
   }
 }
+
+module.exports = { loginProtectionMiddleware };

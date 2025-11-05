@@ -1,10 +1,9 @@
 {
   "name": "@boo-back/backend",
   "version": "1.0.0",
-  "type": "module",
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx start.ts",
-    "build": "rm -rf dist && tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
+    "build": "rimraf dist && tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
     "start": "NODE_ENV=production node dist/start.js",
     "db:push": "drizzle-kit push --config ../../drizzle.config.ts",
     "db:push:force": "drizzle-kit push --force --config ../../drizzle.config.ts",
@@ -50,17 +49,17 @@
     "@types/node": "20.16.11",
     "@types/passport": "^1.0.16",
     "@types/passport-local": "^1.0.38",
-    "@types/ws": "^8.5.13",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.1",
     "@types/sharp": "^0.31.1",
+    "@types/ws": "^8.5.13",
+    "lucide-react": "^0.453.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "lucide-react": "^0.453.0",
+    "rimraf": "^3.0.2",
     "sharp": "^0.34.4",
     "tsc-alias": "^1.8.16",
     "tsx": "^4.20.6",
     "typescript": "^5.6.3"
   }
 }
-

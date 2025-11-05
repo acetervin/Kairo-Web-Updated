@@ -1,18 +1,14 @@
-import { Request, Response } from 'express';
-import { pool } from './db.js';
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-const Stripe = require('stripe');
-import type StripeType from 'stripe';
+import type { Request, Response } from 'express';
+const { pool } = require('./db');
+const StripeLib = require('stripe');
+// @ts-ignore - Stripe type from stripe package
+type Stripe = import('stripe').default;
 
-// Lazy initialization of Stripe client to avoid circular dependency issues
-// This is loaded only when needed, breaking potential module cycles
-// Instance type for the runtime Stripe client (type-only from package)
-type StripeClient = StripeType;
+// Initialize Stripe client (ESM pattern)
+// Using singleton pattern to avoid recreating the client on every request
+let stripeInstance: Stripe | null = null;
 
-let stripeInstance: StripeClient | null = null;
-
-function getStripe(): StripeClient {
+function getStripe(): Stripe {
   if (stripeInstance) {
     return stripeInstance;
   }
@@ -22,13 +18,14 @@ function getStripe(): StripeClient {
     throw new Error('STRIPE_SECRET environment variable is required');
   }
   
-  // new Stripe(...) returns the runtime instance; cast to the typed instance
-  stripeInstance = new Stripe(stripeSecret, { apiVersion: '2022-11-15' }) as StripeClient;
+  stripeInstance = new StripeLib(stripeSecret, {
+    apiVersion: '2022-11-15',
+  });
   return stripeInstance;
 }
 
 // Create a PaymentIntent for a booking
-export async function createPaymentIntent(req: Request, res: Response) {
+async function createPaymentIntent(req: any, res: any) {
   try {
     const { amount, currency = 'KES', bookingData } = req.body;
     if (!amount || !bookingData) return res.status(400).json({ error: 'amount and bookingData required' });
@@ -56,7 +53,7 @@ export async function createPaymentIntent(req: Request, res: Response) {
 }
 
 // Create a Stripe Checkout session for a booking (recommended flow)
-export async function createCheckoutSession(req: Request, res: Response) {
+async function createCheckoutSession(req: any, res: any) {
   try {
     const { amount, currency = 'KES', bookingData } = req.body;
     console.log('bookingData:', bookingData);
@@ -97,7 +94,7 @@ export async function createCheckoutSession(req: Request, res: Response) {
 }
 
 // Create a pending booking in DB and return a Checkout session URL (atomic checkout flow)
-export async function createBookingAndCheckout(req: Request, res: Response) {
+async function createBookingAndCheckout(req: any, res: any) {
   try {
     const { amount, currency = 'KES', bookingData } = req.body;
     if (!amount || !bookingData) return res.status(400).json({ error: 'amount and bookingData required' });
@@ -203,7 +200,7 @@ export async function createBookingAndCheckout(req: Request, res: Response) {
 }
 
 // Stripe webhook to handle events (payment_intent.succeeded etc.)
-export async function stripeWebhook(req: Request, res: Response) {
+async function stripeWebhook(req: any, res: any) {
         console.log('🔔 Webhook received at /api/stripe/webhook');
         console.log('📋 Request body type:', typeof req.body);
         console.log('📋 Request body:', req.body?.toString?.().substring(0, 200) || req.body);
@@ -231,7 +228,7 @@ export async function stripeWebhook(req: Request, res: Response) {
   console.log('📥 Processing webhook event:', event.type);
   switch (event.type) {
     case 'payment_intent.succeeded':
-      const paymentIntent = event.data.object as StripeType.PaymentIntent;
+      const paymentIntent = event.data.object as any;
       console.log('✅ PaymentIntent succeeded:', paymentIntent.id);
       try {
         // Try to mark any booking that contains this payment intent id
@@ -266,8 +263,7 @@ export async function stripeWebhook(req: Request, res: Response) {
               // Non-blocking: trigger sync in background without awaiting
               setImmediate(async () => {
                 try {
-                  // @ts-ignore
-                  const { syncAllFeeds } = await import('./calendarSync.js');
+                  const { syncAllFeeds } = require('./calendarSync');
                   await syncAllFeeds();
                   console.log('iCal sync completed after booking confirmation for booking ID:', confirmedBooking.id);
                 } catch (err) {
@@ -293,7 +289,7 @@ export async function stripeWebhook(req: Request, res: Response) {
       break;
     case 'checkout.session.completed':
       try {
-        const session = event.data.object as StripeType.Checkout.Session;
+        const session = event.data.object as any;
         console.log('✅ Checkout session completed:', session.id);
         console.log('📋 Session metadata:', session.metadata);
         const pi = session.payment_intent as string | undefined;
@@ -354,8 +350,7 @@ export async function stripeWebhook(req: Request, res: Response) {
               // Non-blocking: trigger sync in background without awaiting
               setImmediate(async () => {
                 try {
-                  // @ts-ignore
-                  const { syncAllFeeds } = await import('./calendarSync.js');
+                  const { syncAllFeeds } = require('./calendarSync');
                   await syncAllFeeds();
                   console.log('iCal sync completed after booking confirmation for booking ID:', confirmedBooking.id);
                 } catch (err) {
@@ -382,3 +377,5 @@ export async function stripeWebhook(req: Request, res: Response) {
 
   res.json({ received: true });
 }
+
+module.exports = { createPaymentIntent, createCheckoutSession, createBookingAndCheckout, stripeWebhook };

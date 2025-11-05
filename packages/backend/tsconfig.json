@@ -1,13 +1,18 @@
 {
-  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "composite": true,
-    "module": "Node16",
-    "moduleResolution": "Node16",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "target": "ES2020",
     "outDir": "./dist",
     "noEmit": false,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "strict": false,
     "allowImportingTsExtensions": false,
-    "resolvePackageJsonExports": true,
+    "isolatedModules": false,
+    "lib": ["ES2020"],
     "types": ["node"],
     "baseUrl": ".",
     "tsBuildInfoFile": "./.tsbuildinfo",
@@ -17,7 +22,7 @@
     }
   },
   "include": ["./**/*.ts"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "seed-db.ts", "vite.ts", "scripts/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "seed-db.ts", "vite.ts", "scripts/**/*", "api/**/*"],
   "references": [
     { "path": "../shared" }
   ]

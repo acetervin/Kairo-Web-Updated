@@ -1,11 +1,9 @@
-import { Pool } from 'pg';
+const { Pool } = require('pg');
 
 // Lazy initialization of database pool to avoid errors at module load time
-// This is critical for serverless functions where DATABASE_URL might not be available
-// until the function is invoked
-let poolInstance: Pool | null = null;
+let poolInstance: any = null;
 
-function initializePool(): Pool {
+function initializePool() {
   if (poolInstance) {
     return poolInstance;
   }
@@ -13,7 +11,7 @@ function initializePool(): Pool {
   const connectionString = process.env.DATABASE_URL || process.env.DB_URL;
   
   if (!connectionString) {
-    const errorMsg = 'DATABASE_URL or DB_URL environment variable is required. Please configure it in Vercel environment variables.';
+    const errorMsg = 'DATABASE_URL or DB_URL environment variable is required. Please configure it in your environment variables.';
     console.error(errorMsg);
     throw new Error(errorMsg);
   }
@@ -23,10 +21,8 @@ function initializePool(): Pool {
     process.env.DB_SSL === 'true' ||
     /neon\.tech|sslmode=require/i.test(connectionString || '');
 
-  // Determine pool size based on environment
-  // Serverless (Vercel, AWS Lambda) should use smaller pools
-  const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
-  const poolSize = isServerless ? 1 : 10;
+  // Pool size for Render deployment (non-serverless)
+  const poolSize = 10;
 
   poolInstance = new Pool({
     connectionString,
@@ -43,23 +39,21 @@ function initializePool(): Pool {
     console.error('Unexpected database pool error:', err);
   });
 
-  // Test the connection on startup (skip in serverless to reduce cold start)
-  if (!isServerless) {
-    poolInstance.query('SELECT NOW()', (err, res) => {
-      if (err) {
-        console.error('Database connection test failed:', err);
-      } else {
-        console.log('Database connection test successful:', res.rows[0]);
-      }
-    });
-  }
+  // Test the connection on startup
+  poolInstance.query('SELECT NOW()', (err, res) => {
+    if (err) {
+      console.error('Database connection test failed:', err);
+    } else {
+      console.log('Database connection test successful:', res.rows[0]);
+    }
+  });
 
   return poolInstance;
 }
 
 // Export pool as a Proxy that lazily initializes on first access
 // This prevents the Pool from being created at module load time
-export const pool = new Proxy({} as Pool, {
+const pool = new Proxy({}, {
   get(_target, prop: string | symbol) {
     const pool = initializePool();
     const value = (pool as any)[prop];
@@ -70,3 +64,7 @@ export const pool = new Proxy({} as Pool, {
     return value;
   }
 });
+
+module.exports = { pool };
+
+export {};

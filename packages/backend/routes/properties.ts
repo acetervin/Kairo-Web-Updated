@@ -1,5 +1,5 @@
-import { Router } from 'express';
-import { pool } from '../db.js';
+const { Router } = require('express');
+const { pool } = require('../db');
 
 const router = Router();
 
@@ -161,6 +161,6 @@ router.get('/:id/images', async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;
 
 

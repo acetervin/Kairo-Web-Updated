@@ -1,5 +1,3 @@
-import { Request, Response, NextFunction } from 'express';
-
 /**
  * CORS middleware for allowing cross-origin requests
  * Fully configurable via environment variables - NO hardcoded values
@@ -18,7 +16,7 @@ import { Request, Response, NextFunction } from 'express';
  * - FRONTEND_URL: Single frontend URL (will be added to allowed origins)
  * - ORIGIN: Alias for FRONTEND_URL
  */
-export function cors(req: Request, res: Response, next: NextFunction) {
+function cors(req: any, res: any, next: any) {
   // Check if CORS is disabled
   if (process.env.CORS_ENABLED === 'false') {
     return next();
@@ -80,3 +78,6 @@ export function cors(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
+module.exports = { cors };
+
+export {};

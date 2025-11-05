@@ -1,8 +1,7 @@
-import { Request, Response } from 'express';
-import { pool } from './db.js';
+const { pool } = require('./db');
 
 // Register a calendar feed for a property
-export async function registerCalendarFeed(req: Request, res: Response) {
+async function registerCalendarFeed(req: any, res: any) {
   try {
     const { propertyId, platform, externalCalendarUrl } = req.body;
     if (!propertyId || !externalCalendarUrl || !platform) {
@@ -21,7 +20,7 @@ export async function registerCalendarFeed(req: Request, res: Response) {
 }
 
 // Trigger a sync for a calendar feed id
-export async function syncCalendarFeed(req: Request, res: Response) {
+async function syncCalendarFeed(req: any, res: any) {
   try {
     const id = Number(req.params.id);
     if (!id) return res.status(400).json({ error: 'invalid id' });
@@ -113,7 +112,7 @@ async function syncFeed(feed: any, pool: any) {
 }
 
 // Sync all active feeds
-export async function syncAllFeeds() {
+async function syncAllFeeds() {
   const feedsRes = await pool.query('SELECT * FROM calendar_sync WHERE is_active = true');
   const feeds = feedsRes.rows || [];
   let totalImported = 0;
@@ -130,7 +129,7 @@ export async function syncAllFeeds() {
 }
 
 // Endpoint to get blocked dates for a property
-export async function getBlockedDates(req: Request, res: Response) {
+async function getBlockedDates(req: any, res: any) {
   try {
     const propertyId = Number(req.params.propertyId);
     if (!propertyId) return res.status(400).json({ error: 'invalid propertyId' });
@@ -159,7 +158,7 @@ export async function getBlockedDates(req: Request, res: Response) {
 }
 
 // Export an iCal feed for a property's blocked dates
-export async function exportPropertyICal(req: Request, res: Response) {
+async function exportPropertyICal(req: any, res: any) {
   try {
     const propertyId = Number(req.params.propertyId);
     if (!propertyId) return res.status(400).send('invalid propertyId');
@@ -202,3 +201,5 @@ export async function exportPropertyICal(req: Request, res: Response) {
     res.status(500).send('failed to export calendar');
   }
 }
+
+module.exports = { registerCalendarFeed, syncCalendarFeed, getBlockedDates, exportPropertyICal, syncAllFeeds };

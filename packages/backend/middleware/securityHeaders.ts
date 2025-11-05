@@ -1,6 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
-
-export function securityHeaders(req: Request, res: Response, next: NextFunction) {
+function securityHeaders(req: any, res: any, next: any) {
   // Prevent clickjacking
   res.setHeader('X-Frame-Options', 'DENY');
   
@@ -36,3 +34,6 @@ export function securityHeaders(req: Request, res: Response, next: NextFunction)
   next();
 }
 
+module.exports = { securityHeaders };
+
+export {};

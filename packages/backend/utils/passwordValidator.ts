@@ -1,9 +1,9 @@
-export interface PasswordValidationResult {
+interface PasswordValidationResult {
   isValid: boolean;
   errors: string[];
 }
 
-export function validatePassword(password: string): PasswordValidationResult {
+function validatePassword(password: string): PasswordValidationResult {
   const errors: string[] = [];
 
   if (!password) {
@@ -63,7 +63,7 @@ export function validatePassword(password: string): PasswordValidationResult {
   };
 }
 
-export function sanitizeInput(input: string): string {
+function sanitizeInput(input: string): string {
   if (typeof input !== 'string') {
     return '';
   }
@@ -72,3 +72,4 @@ export function sanitizeInput(input: string): string {
   return input.replace(/\0/g, '').trim();
 }
 
+module.exports = { validatePassword, sanitizeInput };

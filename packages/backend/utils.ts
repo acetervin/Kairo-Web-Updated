@@ -1,11 +1,8 @@
-import fs from "fs";
-import path from "path";
-import express from "express";
-import { fileURLToPath } from "url";
+const fs = require("fs");
+const path = require("path");
+const express = require("express");
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-export function log(message: string, source = "express") {
+function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
@@ -16,7 +13,7 @@ export function log(message: string, source = "express") {
   console.log(`${formattedTime} [${source}] ${message}`);
 }
 
-export function serveStatic(app: express.Express) {
+function serveStatic(app: express.Express) {
   // Frontend builds to root dist/public, backend compiles to packages/backend/dist
   // So from packages/backend/dist/utils.js, we go up three levels to repo root, then into dist/public
   const distPath = path.resolve(__dirname, "../../..", "dist", "public");
@@ -47,3 +44,6 @@ export function serveStatic(app: express.Express) {
   });
 }
 
+module.exports = { log, serveStatic };
+
+export {};

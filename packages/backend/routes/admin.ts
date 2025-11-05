@@ -1,12 +1,12 @@
-import { Router, Request, Response } from 'express';
-import { pool } from '../db.js';
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
-import { loginRateLimiter } from '../middleware/rateLimiter.js';
-import { loginProtectionMiddleware } from '../middleware/loginProtection.js';
-import { checkAccountLockout, recordFailedLogin, recordSuccessfulLogin, MAX_FAILED_ATTEMPTS } from '../middleware/accountLockout.js';
-import { validatePassword, sanitizeInput } from '../utils/passwordValidator.js';
-import { logAuditEvent, AuditEventType, getClientIp, getUserAgent } from '../utils/auditLogger.js';
+const { Router } = require('express');
+const { pool } = require('../db');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+const { loginRateLimiter } = require('../middleware/rateLimiter');
+const { loginProtectionMiddleware } = require('../middleware/loginProtection');
+const { checkAccountLockout, recordFailedLogin, recordSuccessfulLogin, MAX_FAILED_ATTEMPTS } = require('../middleware/accountLockout');
+const { validatePassword, sanitizeInput } = require('../utils/passwordValidator');
+const { logAuditEvent, AuditEventType, getClientIp, getUserAgent } = require('../utils/auditLogger');
 
 const router = Router();
 
@@ -1001,5 +1001,5 @@ router.delete('/bookings/:id', verifyToken, async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;
 

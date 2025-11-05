@@ -1,5 +1,3 @@
-import { Request, Response, NextFunction } from 'express';
-
 interface RateLimitStore {
   [key: string]: {
     count: number;
@@ -20,12 +18,12 @@ setInterval(() => {
   });
 }, 60000); // Clean up every minute
 
-export function createRateLimiter(
+function createRateLimiter(
   windowMs: number,
   maxRequests: number,
-  identifier?: (req: Request) => string
+  identifier?: (req: any) => string
 ) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: any, res: any, next: any) => {
     // Get identifier (IP address or custom function)
     const id = identifier ? identifier(req) : req.ip || req.socket.remoteAddress || 'unknown';
     const key = `${id}`;
@@ -64,15 +62,18 @@ export function createRateLimiter(
 }
 
 // Specific rate limiters
-export const loginRateLimiter = createRateLimiter(
+const loginRateLimiter = createRateLimiter(
   15 * 60 * 1000, // 15 minutes
   5, // 5 attempts per 15 minutes
   (req) => `login:${req.ip || req.socket.remoteAddress || 'unknown'}`
 );
 
-export const generalRateLimiter = createRateLimiter(
+const generalRateLimiter = createRateLimiter(
   60 * 1000, // 1 minute
   100, // 100 requests per minute
   (req) => req.ip || req.socket.remoteAddress || 'unknown'
 );
 
+module.exports = { createRateLimiter, loginRateLimiter, generalRateLimiter };
+
+export {};
