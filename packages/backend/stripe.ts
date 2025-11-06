@@ -19,10 +19,24 @@ function getStripe(): Stripe {
   }
   
   // Support different shapes depending on CJS/ESM interop in runtime
-  const StripeCtor: any = (StripeLib && (StripeLib.default || StripeLib.Stripe)) || StripeLib;
-  stripeInstance = new StripeCtor(stripeSecret, {
-    apiVersion: '2022-11-15',
-  });
+  const maybeDefault: any = StripeLib && (StripeLib.default || StripeLib.Stripe) ? (StripeLib.default || StripeLib.Stripe) : null;
+  const candidate: any = maybeDefault || StripeLib;
+
+  // Try constructable first
+  try {
+    // eslint-disable-next-line new-cap
+    stripeInstance = new candidate(stripeSecret, { apiVersion: '2022-11-15' });
+  } catch (_e) {
+    // If not constructable, try callable export shape
+    if (typeof candidate === 'function') {
+      // Some CJS builds export a callable factory instead of a constructable
+      stripeInstance = candidate(stripeSecret, { apiVersion: '2022-11-15' });
+    } else if (StripeLib && typeof StripeLib === 'function') {
+      stripeInstance = StripeLib(stripeSecret, { apiVersion: '2022-11-15' });
+    } else {
+      throw new Error('Failed to initialize Stripe client: unsupported module export shape');
+    }
+  }
   return stripeInstance;
 }
 
