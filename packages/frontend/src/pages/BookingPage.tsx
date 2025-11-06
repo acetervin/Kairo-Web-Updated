@@ -130,7 +130,9 @@ export default function BookingPage() {
     if (date?.from) {
       if (date.to) {
         let isUnavailable = false;
+        // Treat checkout day as exclusive for availability checks
         const loopTo = new Date(date.to);
+        loopTo.setDate(loopTo.getDate() - 1);
         const disabledSource = externalBlockedDates.length ? externalBlockedDates : unavailableDatesStatic;
         for (let d = new Date(date.from); d <= loopTo; d.setDate(d.getDate() + 1)) {
           // block past dates
