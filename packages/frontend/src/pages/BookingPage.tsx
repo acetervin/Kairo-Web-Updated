@@ -394,10 +394,21 @@ Please let me know availability and next steps. Thank you!`;
                           selected={date} 
                           onSelect={setDate} 
                           numberOfMonths={2} 
-                          disabled={[
-                            ... (externalBlockedDates.length ? externalBlockedDates : unavailableDatesStatic),
-                            { before: new Date() }
-                          ]}
+                          disabled={[(day: Date) => {
+                            const today = new Date();
+                            today.setHours(0,0,0,0);
+                            if (day < today) return true;
+                            const disabledSource = externalBlockedDates.length ? externalBlockedDates : unavailableDatesStatic;
+                            const isBlocked = disabledSource.some((ud: Date) => isSameDay(ud, day));
+                            // Allow selecting a checkout day that coincides with a blocked night (start of next booking)
+                            if (date?.from && !date?.to) {
+                              const candidateCheckout = day;
+                              if (isSameDay(candidateCheckout, addDays(date.from, 1))) {
+                                return false;
+                              }
+                            }
+                            return isBlocked;
+                          }]}
                         />
                         <div className="flex justify-end gap-2 p-4 border-t border-border">
                           <Button variant="ghost" onClick={() => setDate(undefined)}>Reset</Button>
