@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const express = require("express");
+import type { Express } from 'express';
 
 function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -13,7 +14,7 @@ function log(message: string, source = "express") {
   console.log(`${formattedTime} [${source}] ${message}`);
 }
 
-function serveStatic(app: express.Express) {
+function serveStatic(app: Express) {
   // Frontend builds to root dist/public, backend compiles to packages/backend/dist
   // So from packages/backend/dist/utils.js, we go up three levels to repo root, then into dist/public
   const distPath = path.resolve(__dirname, "../../..", "dist", "public");

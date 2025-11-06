@@ -1,3 +1,5 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const { pool } = require('./db');
 // Register a calendar feed for a property
 async function registerCalendarFeed(req, res) {

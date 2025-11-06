@@ -1,3 +1,4 @@
+import { Request, Response, NextFunction } from 'express';
 const { Router } = require('express');
 const { pool } = require('../db');
 const jwt = require('jsonwebtoken');
@@ -14,7 +15,7 @@ const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production';
 
 // Middleware to verify admin token
-const verifyToken = async (req: any, res: Response, next: any) => {
+const verifyToken = async (req: any, res: Response, next: NextFunction) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
 
   if (!token) {

@@ -1,3 +1,7 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.generalRateLimiter = exports.loginRateLimiter = void 0;
+exports.createRateLimiter = createRateLimiter;
 // In-memory store for rate limiting (use Redis in production)
 const rateLimitStore = {};
 // Clean up old entries periodically
@@ -43,10 +47,10 @@ function createRateLimiter(windowMs, maxRequests, identifier) {
     };
 }
 // Specific rate limiters
-const loginRateLimiter = createRateLimiter(15 * 60 * 1000, // 15 minutes
+exports.loginRateLimiter = createRateLimiter(15 * 60 * 1000, // 15 minutes
 5, // 5 attempts per 15 minutes
 (req) => `login:${req.ip || req.socket.remoteAddress || 'unknown'}`);
-const generalRateLimiter = createRateLimiter(60 * 1000, // 1 minute
+exports.generalRateLimiter = createRateLimiter(60 * 1000, // 1 minute
 100, // 100 requests per minute
 (req) => req.ip || req.socket.remoteAddress || 'unknown');
-module.exports = { createRateLimiter, loginRateLimiter, generalRateLimiter };
+module.exports = { createRateLimiter, loginRateLimiter: exports.loginRateLimiter, generalRateLimiter: exports.generalRateLimiter };

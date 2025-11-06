@@ -1,3 +1,29 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+/// <reference types="node" />
 require('dotenv/config');
 const express = require("express");
 const { serveStatic, log } = require("./utils");
@@ -64,7 +90,8 @@ async function createApp() {
     // Calendar sync endpoints
     try {
         // Lazy import to avoid requiring optional deps during lighter dev runs
-        const { registerCalendarFeed, syncCalendarFeed, getBlockedDates, exportPropertyICal } = require('./calendarSync');
+        // @ts-ignore
+        const { registerCalendarFeed, syncCalendarFeed, getBlockedDates, exportPropertyICal } = await Promise.resolve().then(() => __importStar(require('./calendarSync.js')));
         app.post('/api/calendar-sync', registerCalendarFeed);
         app.post('/api/calendar-sync/:id/sync', syncCalendarFeed);
         app.get('/api/properties/:propertyId/blocked-dates', getBlockedDates);
@@ -74,7 +101,8 @@ async function createApp() {
         console.error('Failed to register calendar sync routes', e);
     }
     try {
-        const stripeRoutes = require('./routes/stripe');
+        // @ts-ignore
+        const stripeRoutes = (await Promise.resolve().then(() => __importStar(require('./routes/stripe.js')))).default;
         app.use('/api/stripe', stripeRoutes);
         console.log('✅ Stripe routes registered successfully');
     }
@@ -83,42 +111,48 @@ async function createApp() {
         console.error('This may be because the routes were not compiled. Make sure to run: npm run build --workspace=@boo-back/backend');
     }
     try {
-        const propertiesRoutes = require('./routes/properties');
+        // @ts-ignore
+        const propertiesRoutes = (await Promise.resolve().then(() => __importStar(require('./routes/properties.js')))).default;
         app.use('/api/properties', propertiesRoutes);
     }
     catch (e) {
         console.error('Failed to register properties routes', e);
     }
     try {
-        const bookingsRoutes = require('./routes/bookings');
+        // @ts-ignore
+        const bookingsRoutes = (await Promise.resolve().then(() => __importStar(require('./routes/bookings.js')))).default;
         app.use('/api/bookings', bookingsRoutes);
     }
     catch (e) {
         console.error('Failed to register bookings routes', e);
     }
     try {
-        const adminRoutes = require('./routes/admin');
+        // @ts-ignore
+        const adminRoutes = (await Promise.resolve().then(() => __importStar(require('./routes/admin.js')))).default;
         app.use('/api/admin', adminRoutes);
     }
     catch (e) {
         console.error('Failed to register admin routes', e);
     }
     try {
-        const migrateMapUrlRoutes = require('./routes/migrate-map-url');
+        // @ts-ignore
+        const migrateMapUrlRoutes = (await Promise.resolve().then(() => __importStar(require('./routes/migrate-map-url.js')))).default;
         app.use('/api/migrate-map-url', migrateMapUrlRoutes);
     }
     catch (e) {
         console.error('Failed to register migrate-map-url routes', e);
     }
     try {
-        const migrateCategorizedImagesRoutes = require('./routes/migrate-categorized-images');
+        // @ts-ignore
+        const migrateCategorizedImagesRoutes = (await Promise.resolve().then(() => __importStar(require('./routes/migrate-categorized-images.js')))).default;
         app.use('/api/migrate-categorized-images', migrateCategorizedImagesRoutes);
     }
     catch (e) {
         console.error('Failed to register migrate-categorized-images routes', e);
     }
     try {
-        const migrateImagesStructureRoutes = require('./routes/migrate-images-structure');
+        // @ts-ignore
+        const migrateImagesStructureRoutes = (await Promise.resolve().then(() => __importStar(require('./routes/migrate-images-structure.js')))).default;
         app.use('/api/migrate-images-structure', migrateImagesStructureRoutes);
     }
     catch (e) {

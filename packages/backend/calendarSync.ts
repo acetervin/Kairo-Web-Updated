@@ -1,3 +1,4 @@
+import { Request, Response } from 'express';
 const { pool } = require('./db');
 
 // Register a calendar feed for a property

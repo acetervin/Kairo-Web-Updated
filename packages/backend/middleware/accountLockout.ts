@@ -1,6 +1,7 @@
+import { Request, Response } from 'express';
 const { pool } = require('../db');
 
-interface FailedLoginAttempt {
+export interface FailedLoginAttempt {
   username: string;
   count: number;
   lastAttempt: number;
@@ -25,10 +26,10 @@ setInterval(() => {
   });
 }, 5 * 60 * 1000); // Clean up every 5 minutes
 
-const MAX_FAILED_ATTEMPTS = 5;
+export const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 
-function checkAccountLockoutSync(
+export function checkAccountLockoutSync(
   username: string
 ): { isLocked: boolean; lockedUntil?: Date; remainingAttempts?: number } {
   const attempt = failedAttempts.get(username);
@@ -62,7 +63,7 @@ function checkAccountLockoutSync(
   };
 }
 
-async function checkAccountLockout(
+export async function checkAccountLockout(
   username: string
 ): Promise<{ isLocked: boolean; lockedUntil?: Date; remainingAttempts?: number }> {
   const attempt = failedAttempts.get(username);
@@ -99,7 +100,7 @@ async function checkAccountLockout(
   };
 }
 
-function recordFailedLogin(username: string): { isLocked: boolean; lockedUntil?: Date } {
+export function recordFailedLogin(username: string): { isLocked: boolean; lockedUntil?: Date } {
   const attempt = failedAttempts.get(username);
   const now = Date.now();
 
@@ -147,7 +148,7 @@ function recordFailedLogin(username: string): { isLocked: boolean; lockedUntil?:
   return { isLocked: false };
 }
 
-function recordSuccessfulLogin(username: string): void {
+export function recordSuccessfulLogin(username: string): void {
   // Clear failed attempts on successful login
   failedAttempts.delete(username);
   

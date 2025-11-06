@@ -1,3 +1,4 @@
+import { Request, Response } from 'express';
 const { Router } = require('express');
 const express = require('express');
 const { createCheckoutSession, createBookingAndCheckout, stripeWebhook } = require('../stripe');

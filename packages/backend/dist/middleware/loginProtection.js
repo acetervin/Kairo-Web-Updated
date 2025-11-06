@@ -1,3 +1,6 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.loginProtectionMiddleware = loginProtectionMiddleware;
 const { checkAccountLockout, checkAccountLockoutSync } = require('./accountLockout');
 const { sanitizeInput } = require('../utils/passwordValidator');
 // Rate limit store for login
