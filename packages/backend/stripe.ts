@@ -18,24 +18,42 @@ function getStripe(): Stripe {
     throw new Error('STRIPE_SECRET environment variable is required');
   }
   
-  // Support different shapes depending on CJS/ESM interop in runtime
-  const maybeDefault: any = StripeLib && (StripeLib.default || StripeLib.Stripe) ? (StripeLib.default || StripeLib.Stripe) : null;
-  const candidate: any = maybeDefault || StripeLib;
+  // Resolve Stripe constructor/function robustly across CJS/ESM shapes
+  const mod: any = StripeLib;
+  const candidates: any[] = [mod?.Stripe, mod?.default, mod];
+  let resolved: any = null;
+  for (const c of candidates) {
+    if (typeof c === 'function') {
+      resolved = c;
+      break;
+    }
+  }
+  // As a last resort, scan enumerable values for a function
+  if (!resolved && mod && typeof mod === 'object') {
+    for (const v of Object.values(mod)) {
+      if (typeof v === 'function') {
+        resolved = v;
+        break;
+      }
+    }
+  }
 
-  // Try constructable first
+  if (!resolved) {
+    // Log module shape to aid debugging in hosted envs
+    // eslint-disable-next-line no-console
+    console.error('Stripe module shape:', {
+      typeOfModule: typeof mod,
+      keys: mod && typeof mod === 'object' ? Object.keys(mod) : undefined,
+    });
+    throw new Error('Failed to initialize Stripe client: unsupported module export shape');
+  }
+
+  // Prefer constructable usage, fallback to callable
   try {
     // eslint-disable-next-line new-cap
-    stripeInstance = new candidate(stripeSecret, { apiVersion: '2022-11-15' });
+    stripeInstance = new resolved(stripeSecret, { apiVersion: '2022-11-15' });
   } catch (_e) {
-    // If not constructable, try callable export shape
-    if (typeof candidate === 'function') {
-      // Some CJS builds export a callable factory instead of a constructable
-      stripeInstance = candidate(stripeSecret, { apiVersion: '2022-11-15' });
-    } else if (StripeLib && typeof StripeLib === 'function') {
-      stripeInstance = StripeLib(stripeSecret, { apiVersion: '2022-11-15' });
-    } else {
-      throw new Error('Failed to initialize Stripe client: unsupported module export shape');
-    }
+    stripeInstance = resolved(stripeSecret, { apiVersion: '2022-11-15' });
   }
   return stripeInstance;
 }
