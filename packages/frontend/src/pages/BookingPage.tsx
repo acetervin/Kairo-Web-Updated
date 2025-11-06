@@ -110,7 +110,10 @@ export default function BookingPage() {
         (data.blocked || []).forEach((b: any) => {
           const s = new Date(b.startDate);
           const e = new Date(b.endDate);
-          for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+          // Treat endDate as checkout-day exclusive: block up to day before end
+          const loopTo = new Date(e);
+          loopTo.setDate(loopTo.getDate() - 1);
+          for (let d = new Date(s); d <= loopTo; d.setDate(d.getDate() + 1)) {
             dates.push(new Date(d));
           }
         });
