@@ -1,6 +1,37 @@
 import { Request, Response } from 'express';
 const { pool } = require('./db');
 
+function parseICalDate(value: string): Date {
+  const v = (value || '').trim();
+  // Matches: YYYYMMDD or YYYYMMDDTHHMMSS or YYYYMMDDTHHMMSSZ
+  const m = v.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})Z?)?$/);
+  if (m) {
+    const year = Number(m[1]);
+    const monthIndex = Number(m[2]) - 1; // 0-based
+    const day = Number(m[3]);
+    if (m[4] !== undefined) {
+      const hour = Number(m[4]);
+      const minute = Number(m[5]);
+      const second = Number(m[6]);
+      return new Date(Date.UTC(year, monthIndex, day, hour, minute, second));
+    }
+    // Date-only interpreted as UTC midnight
+    return new Date(Date.UTC(year, monthIndex, day));
+  }
+  const d = new Date(v);
+  if (isNaN(d.getTime())) {
+    throw new Error(`Invalid iCal date: ${value}`);
+  }
+  return d;
+}
+
+function toDateOnlyStringUTC(d: Date): string {
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 // Register a calendar feed for a property
 async function registerCalendarFeed(req: any, res: any) {
   try {
@@ -41,16 +72,18 @@ async function syncCalendarFeed(req: any, res: any) {
       const dtend = (v.match(/DTEND(?:;[^:]*)?:(.*)/) || [])[1] || dtstart;
       const uid = (v.match(/UID:(.*)/) || [])[1] || dtstart;
       if (!dtstart) continue;
-      const s = new Date(dtstart);
-      const e = new Date(dtend);
+      const s = parseICalDate(dtstart);
+      const e = parseICalDate(dtend);
       events.push({ start: s, end: e, uid });
     }
 
     for (const ev of events) {
+      const startDate = toDateOnlyStringUTC(ev.start);
+      const endDate = toDateOnlyStringUTC(ev.end);
       await pool.query(
         `INSERT INTO blocked_dates (property_id, start_date, end_date, reason, source, external_id, created_at, updated_at, is_active)
          VALUES ($1,$2,$3,$4,$5,$6,NOW(), NOW(), true)`,
-        [feed.property_id || feed.propertyId, ev.start.toISOString(), ev.end.toISOString(), 'external_booking', feed.platform, ev.uid]
+        [feed.property_id || feed.propertyId, startDate, endDate, 'external_booking', feed.platform, ev.uid]
       );
     }
 
@@ -85,11 +118,11 @@ async function syncFeed(feed: any, pool: any) {
     const dtend = (v.match(/DTEND(?:;[^:]*)?:(.*)/) || [])[1] || dtstart;
     const uid = (v.match(/UID:(.*)/) || [])[1] || dtstart;
     if (!dtstart) continue;
-    const s = new Date(dtstart);
-    const e = new Date(dtend);
-    // normalize to date-only YYYY-MM-DD
-    const sDate = new Date(Date.UTC(s.getUTCFullYear(), s.getUTCMonth(), s.getUTCDate())).toISOString().slice(0, 10);
-    const eDate = new Date(Date.UTC(e.getUTCFullYear(), e.getUTCMonth(), e.getUTCDate())).toISOString().slice(0, 10);
+    const s = parseICalDate(dtstart);
+    const e = parseICalDate(dtend);
+    // normalize to date-only YYYY-MM-DD (UTC)
+    const sDate = toDateOnlyStringUTC(s);
+    const eDate = toDateOnlyStringUTC(e);
     events.push({ start: sDate, end: eDate, uid });
   }
 
