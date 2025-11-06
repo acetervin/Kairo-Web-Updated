@@ -7,55 +7,62 @@ type Stripe = import('stripe').default;
 // Initialize Stripe client (ESM pattern)
 // Using singleton pattern to avoid recreating the client on every request
 let stripeInstance: Stripe | null = null;
+let stripeInitPromise: Promise<Stripe> | null = null;
 
-function getStripe(): Stripe {
-  if (stripeInstance) {
-    return stripeInstance;
-  }
-  
-  const stripeSecret = process.env.STRIPE_SECRET || '';
-  if (!stripeSecret) {
-    throw new Error('STRIPE_SECRET environment variable is required');
-  }
-  
-  // Resolve Stripe constructor/function robustly across CJS/ESM shapes
-  const mod: any = StripeLib;
-  const candidates: any[] = [mod?.Stripe, mod?.default, mod];
-  let resolved: any = null;
-  for (const c of candidates) {
-    if (typeof c === 'function') {
-      resolved = c;
-      break;
+async function getStripe(): Promise<Stripe> {
+  if (stripeInstance) return stripeInstance;
+  if (stripeInitPromise) return stripeInitPromise;
+
+  stripeInitPromise = (async () => {
+    const stripeSecret = process.env.STRIPE_SECRET || '';
+    if (!stripeSecret) {
+      throw new Error('STRIPE_SECRET environment variable is required');
     }
-  }
-  // As a last resort, scan enumerable values for a function
-  if (!resolved && mod && typeof mod === 'object') {
-    for (const v of Object.values(mod)) {
-      if (typeof v === 'function') {
-        resolved = v;
+
+    // Try dynamic import first (works with ESM-only Stripe). Fall back to require if available.
+    let mod: any = null;
+    try {
+      mod = await import('stripe');
+    } catch (eImport) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        mod = require('stripe');
+      } catch (eRequire) {
+        mod = null;
+      }
+    }
+
+    const candidates: any[] = [mod?.default, mod?.Stripe, mod];
+    let ResolvedCtor: any = null;
+    for (const c of candidates) {
+      if (typeof c === 'function') {
+        ResolvedCtor = c;
         break;
       }
     }
-  }
 
-  if (!resolved) {
-    // Log module shape to aid debugging in hosted envs
-    // eslint-disable-next-line no-console
-    console.error('Stripe module shape:', {
-      typeOfModule: typeof mod,
-      keys: mod && typeof mod === 'object' ? Object.keys(mod) : undefined,
-    });
-    throw new Error('Failed to initialize Stripe client: unsupported module export shape');
-  }
+    if (!ResolvedCtor) {
+      // eslint-disable-next-line no-console
+      console.error('Stripe module shape:', {
+        typeOfModule: typeof mod,
+        keys: mod && typeof mod === 'object' ? Object.keys(mod) : undefined,
+      });
+      throw new Error('Failed to initialize Stripe client: unsupported module export shape');
+    }
 
-  // Prefer constructable usage, fallback to callable
-  try {
-    // eslint-disable-next-line new-cap
-    stripeInstance = new resolved(stripeSecret, { apiVersion: '2022-11-15' });
-  } catch (_e) {
-    stripeInstance = resolved(stripeSecret, { apiVersion: '2022-11-15' });
-  }
-  return stripeInstance;
+    // Construct the client
+    try {
+      // eslint-disable-next-line new-cap
+      stripeInstance = new ResolvedCtor(stripeSecret, { apiVersion: '2022-11-15' });
+    } catch (e) {
+      // Some shapes might be callable rather than constructable
+      stripeInstance = ResolvedCtor(stripeSecret, { apiVersion: '2022-11-15' });
+    }
+
+    return stripeInstance as Stripe;
+  })();
+
+  return stripeInitPromise;
 }
 
 // Create a PaymentIntent for a booking
@@ -68,7 +75,7 @@ async function createPaymentIntent(req: any, res: any) {
     // For KES assume 100 cents per KES (if KES uses two decimal places); adjust if needed.
     const amountMinor = Math.round(Number(amount) * 100);
 
-    const paymentIntent = await getStripe().paymentIntents.create({
+  const paymentIntent = await (await getStripe()).paymentIntents.create({
       amount: amountMinor,
       currency: currency.toLowerCase(),
       // optionally include metadata to connect to bookings
@@ -97,7 +104,7 @@ async function createCheckoutSession(req: any, res: any) {
 
     const frontend = process.env.FRONTEND_URL || 'http://localhost:5000';
 
-    const session = await getStripe().checkout.sessions.create({
+  const session = await (await getStripe()).checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
       line_items: [
@@ -203,7 +210,7 @@ async function createBookingAndCheckout(req: any, res: any) {
     const amountMinor = Math.round(Number(amount) * 100);
     const frontend = process.env.FRONTEND_URL || 'http://localhost:5000';
 
-    const session = await getStripe().checkout.sessions.create({
+  const session = await (await getStripe()).checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
       line_items: [
@@ -248,10 +255,10 @@ async function stripeWebhook(req: any, res: any) {
 
   let event;
   try {
-    // The raw middleware from express.raw() provides req.body as a Buffer
-    // constructEvent requires the exact signed payload as a Buffer or string
-    const rawBody = req.body;
-    event = getStripe().webhooks.constructEvent(rawBody, sig!, webhookSecret);
+  // The raw middleware from express.raw() provides req.body as a Buffer
+  // constructEvent requires the exact signed payload as a Buffer or string
+  const rawBody = req.body;
+  event = (await getStripe()).webhooks.constructEvent(rawBody, sig!, webhookSecret);
     console.log('✅ Webhook signature verified. Event type:', event.type);
   } catch (err: any) {
     console.error('❌ Webhook signature verification failed', err);
