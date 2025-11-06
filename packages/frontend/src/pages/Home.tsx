@@ -112,10 +112,10 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { title: "Nairobi", img: "https://images.unsplash.com/photo-1564760055775-d63b17a55c44?q=80&w=1200" },
-              { title: "Diani Beach", img: "https://images.unsplash.com/photo-1505765050516-f72dcac9c60e?q=80&w=1200" },
-              { title: "Watamu", img: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=1200" },
-              { title: "Naivasha", img: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200" },
+              { title: "Nairobi", img: "/nairobi.jpg" },
+              { title: "Diani Beach", img: "/diani.jpg" },
+              { title: "Watamu", img: "/watamu.webp" },
+              { title: "Naivasha", img: "/naivasha.webp" },
             ].map(({ title, img }) => (
               <Link key={title} href={`/properties?location=${encodeURIComponent(title)}`}>
                 <div className="group relative h-48 sm:h-56 rounded-xl overflow-hidden cursor-pointer">
