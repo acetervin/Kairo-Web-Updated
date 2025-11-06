@@ -79,11 +79,21 @@ async function createApp() {
     try {
         // Lazy import to avoid requiring optional deps during lighter dev runs
         // @ts-ignore
-        const { registerCalendarFeed, syncCalendarFeed, getBlockedDates, exportPropertyICal } = await import('./calendarSync.js');
+        const { registerCalendarFeed, syncCalendarFeed, getBlockedDates, exportPropertyICal, syncAllFeeds } = await import('./calendarSync.js');
         app.post('/api/calendar-sync', registerCalendarFeed);
         app.post('/api/calendar-sync/:id/sync', syncCalendarFeed);
+        app.post('/api/calendar-sync/sync-all', async (_req: any, res: any) => {
+            try {
+                const result = await syncAllFeeds();
+                res.json({ success: true, ...result });
+            } catch (e: any) {
+                res.status(500).json({ success: false, error: String(e) });
+            }
+        });
         app.get('/api/properties/:propertyId/blocked-dates', getBlockedDates);
         app.get('/api/properties/:propertyId/ical', exportPropertyICal);
+        // Alias with .ics extension for platforms that validate by URL suffix
+        app.get('/api/properties/:propertyId.ics', exportPropertyICal);
     } catch (e) {
         console.error('Failed to register calendar sync routes', e);
     }
