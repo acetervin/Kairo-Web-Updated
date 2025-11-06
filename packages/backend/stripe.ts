@@ -18,7 +18,9 @@ function getStripe(): Stripe {
     throw new Error('STRIPE_SECRET environment variable is required');
   }
   
-  stripeInstance = new StripeLib(stripeSecret, {
+  // Support different shapes depending on CJS/ESM interop in runtime
+  const StripeCtor: any = (StripeLib && (StripeLib.default || StripeLib.Stripe)) || StripeLib;
+  stripeInstance = new StripeCtor(stripeSecret, {
     apiVersion: '2022-11-15',
   });
   return stripeInstance;
