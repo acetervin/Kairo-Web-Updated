@@ -47,6 +47,16 @@ async function getStripe(): Promise<Stripe> {
         typeOfModule: typeof mod,
         keys: mod && typeof mod === 'object' ? Object.keys(mod) : undefined,
       });
+      // Extra diagnostic: where does Node resolve the 'stripe' package from? This helps detect accidental local shadowing.
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const resolvedPath = require.resolve('stripe');
+        // eslint-disable-next-line no-console
+        console.error('require.resolve("stripe") ->', resolvedPath);
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error('require.resolve("stripe") failed:', e && e.message);
+      }
       throw new Error('Failed to initialize Stripe client: unsupported module export shape');
     }
 
