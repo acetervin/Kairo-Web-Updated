@@ -1,11 +1,14 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Home, Calendar, MapPin } from 'lucide-react';
+import { CheckCircle, Home, Calendar, MapPin, Download } from 'lucide-react';
 import PaymentSuccessSkeleton from '@/components/skeletons/PaymentSuccessSkeleton';
 import { apiUrl } from '@/utils/apiConfig';
+import BookingReceipt from '@/components/BookingReceipt';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 export default function PaymentSuccessPage() {
   const [location] = useLocation();
@@ -14,6 +17,7 @@ export default function PaymentSuccessPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [propertyName, setPropertyName] = useState<string | null>(null);
+  const receiptRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -91,6 +95,19 @@ export default function PaymentSuccessPage() {
     loadProperty();
   }, [booking]);
 
+  const handleDownloadReceipt = () => {
+    if (receiptRef.current) {
+      html2canvas(receiptRef.current).then((canvas) => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.save('booking-receipt.pdf');
+      });
+    }
+  };
+
   if (isLoading) {
     return <PaymentSuccessSkeleton />;
   }
@@ -143,12 +160,24 @@ export default function PaymentSuccessPage() {
           )}
 
           <div className="mt-2 flex flex-col gap-3">
+            {booking && (
+              <Button onClick={handleDownloadReceipt}>
+                <Download className="mr-2 h-4 w-4" /> Download Receipt
+              </Button>
+            )}
             <Button asChild>
               <Link to="/"><Home className="mr-2 h-4 w-4" /> Go to Homepage</Link>
             </Button>
           </div>
         </CardContent>
       </Card>
+      {booking && propertyName && (
+        <div style={{ position: 'absolute', left: '-9999px' }}>
+          <div ref={receiptRef}>
+            <BookingReceipt booking={booking} propertyName={propertyName} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

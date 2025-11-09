@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 const { pool } = require('./db');
-const StripeLib = require('stripe');
+
 // @ts-ignore - Stripe type from stripe package
 type Stripe = import('stripe').default;
 
@@ -19,16 +19,32 @@ async function getStripe(): Promise<Stripe> {
       throw new Error('STRIPE_SECRET environment variable is required');
     }
 
-    // Try dynamic import first (works with ESM-only Stripe). Fall back to require if available.
+    // Resolve the installed 'stripe' package from the project root to avoid accidental
+    // local-file shadowing (some dev loaders allow importing .ts files by bare specifier).
+    // Prefer requiring from process.cwd() so we resolve node_modules/stripe, not a local ./stripe file.
     let mod: any = null;
     try {
-      mod = await import('stripe');
-    } catch (eImport) {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { createRequire } = require('module');
+      // Prefer resolving from the repository root (two levels above this file)
+      // instead of process.cwd() which may be the packages/backend folder when running dev scripts.
+      // This helps avoid accidentally resolving the local `packages/backend/stripe.ts` file.
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const path = require('path');
+      const repoRoot = path.resolve(__dirname, '..', '..') + '/';
+      const rootRequire = createRequire(repoRoot);
+      mod = rootRequire('stripe');
+    } catch (eRoot) {
+      // Fallback to dynamic import / require as before
       try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        mod = require('stripe');
-      } catch (eRequire) {
-        mod = null;
+        mod = await import('stripe');
+      } catch (eImport) {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          mod = require('stripe');
+        } catch (eRequire) {
+          mod = null;
+        }
       }
     }
 
@@ -85,7 +101,7 @@ async function createPaymentIntent(req: any, res: any) {
     // For KES assume 100 cents per KES (if KES uses two decimal places); adjust if needed.
     const amountMinor = Math.round(Number(amount) * 100);
 
-  const paymentIntent = await (await getStripe()).paymentIntents.create({
+    const paymentIntent = await (await getStripe()).paymentIntents.create({
       amount: amountMinor,
       currency: currency.toLowerCase(),
       // optionally include metadata to connect to bookings
@@ -114,7 +130,7 @@ async function createCheckoutSession(req: any, res: any) {
 
     const frontend = process.env.FRONTEND_URL || 'http://localhost:5000';
 
-  const session = await (await getStripe()).checkout.sessions.create({
+    const session = await (await getStripe()).checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
       line_items: [
@@ -150,8 +166,8 @@ async function createBookingAndCheckout(req: any, res: any) {
     const { amount, currency = 'KES', bookingData } = req.body;
     if (!amount || !bookingData) return res.status(400).json({ error: 'amount and bookingData required' });
 
-  // Insert a pending booking record
-  const client = await pool.connect();
+    // Insert a pending booking record
+    const client = await pool.connect();
     let bookingRecord: any = null;
     try {
       await client.query('BEGIN');
@@ -192,7 +208,7 @@ async function createBookingAndCheckout(req: any, res: any) {
          LIMIT 1`,
         [propertyId, checkIn, checkOut]
       );
-      
+
       if (availabilityCheck.rowCount && availabilityCheck.rowCount > 0) {
         throw Object.assign(new Error('Selected dates are no longer available. Please choose different dates.'), { name: 'ValidationError' });
       }
@@ -220,7 +236,7 @@ async function createBookingAndCheckout(req: any, res: any) {
     const amountMinor = Math.round(Number(amount) * 100);
     const frontend = process.env.FRONTEND_URL || 'http://localhost:5000';
 
-  const session = await (await getStripe()).checkout.sessions.create({
+    const session = await (await getStripe()).checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
       line_items: [
@@ -252,9 +268,9 @@ async function createBookingAndCheckout(req: any, res: any) {
 
 // Stripe webhook to handle events (payment_intent.succeeded etc.)
 async function stripeWebhook(req: any, res: any) {
-        console.log('🔔 Webhook received at /api/stripe/webhook');
-        console.log('📋 Request body type:', typeof req.body);
-        console.log('📋 Request body:', req.body?.toString?.().substring(0, 200) || req.body);
+  console.log('🔔 Webhook received at /api/stripe/webhook');
+  console.log('📋 Request body type:', typeof req.body);
+  console.log('📋 Request body:', req.body?.toString?.().substring(0, 200) || req.body);
   const sig = req.headers['stripe-signature'] as string | undefined;
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -265,10 +281,10 @@ async function stripeWebhook(req: any, res: any) {
 
   let event;
   try {
-  // The raw middleware from express.raw() provides req.body as a Buffer
-  // constructEvent requires the exact signed payload as a Buffer or string
-  const rawBody = req.body;
-  event = (await getStripe()).webhooks.constructEvent(rawBody, sig!, webhookSecret);
+    // The raw middleware from express.raw() provides req.body as a Buffer
+    // constructEvent requires the exact signed payload as a Buffer or string
+    const rawBody = req.body;
+    event = (await getStripe()).webhooks.constructEvent(rawBody, sig!, webhookSecret);
     console.log('✅ Webhook signature verified. Event type:', event.type);
   } catch (err: any) {
     console.error('❌ Webhook signature verification failed', err);
@@ -308,7 +324,7 @@ async function stripeWebhook(req: any, res: any) {
               }
             }
             await client.query('COMMIT');
-            
+
             // Trigger iCal sync for connected calendars after successful booking (fire-and-forget)
             if (confirmedBooking) {
               // Non-blocking: trigger sync in background without awaiting
@@ -395,7 +411,7 @@ async function stripeWebhook(req: any, res: any) {
                   }
             }
             await client.query('COMMIT');
-            
+
             // Trigger iCal sync for connected calendars after successful booking (fire-and-forget)
             if (confirmedBooking) {
               // Non-blocking: trigger sync in background without awaiting
